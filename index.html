@@ -1,0 +1,3579 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover"/>
+<title>Daily — for your mind</title>
+
+<!-- PWA -->
+<meta name="theme-color" content="#5F7A55"/>
+<meta name="mobile-web-app-capable" content="yes"/>
+<meta name="apple-mobile-web-app-capable" content="yes"/>
+<meta name="apple-mobile-web-app-status-bar-style" content="default"/>
+<meta name="apple-mobile-web-app-title" content="Daily"/>
+
+<!-- Fonts -->
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+<link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&family=Instrument+Serif:ital@0;1&display=swap" rel="stylesheet"/>
+
+<style>
+/* Daily v2 — stylesheet */
+
+/* ====== Reset & base ====== */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html { -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale; }
+
+body {
+  font-family: 'Geist', 'Inter', system-ui, sans-serif;
+  font-size: 14px;
+  line-height: 1.5;
+  background: var(--bg, #E8EBDD);
+  color: var(--text, #22281F);
+  --pad: 16px;
+  --r: 14px;
+}
+
+body[data-density="Compact"] { --pad: 12px; font-size: 13px; }
+body[data-radius="Sharp"] { --r: 6px; }
+
+/* ====== Typography ====== */
+.serif { font-family: 'Instrument Serif', Georgia, serif; }
+.muted { color: var(--muted); }
+.caps { text-transform: uppercase; letter-spacing: .06em; }
+.xsmall { font-size: 11px; line-height: 1.4; }
+.small { font-size: 12px; }
+.regular { font-weight: 400; }
+.large { font-size: 18px; }
+.large-text { font-size: 15px; }
+.xlarge { font-size: 22px; }
+.xxlarge { font-size: 32px; }
+.op85 { opacity: .85; }
+.op6 { opacity: .6; }
+.inline { display: inline; }
+
+/* ====== Layout ====== */
+.ambient {
+  position: fixed; inset: 0; z-index: 0;
+  pointer-events: none;
+}
+
+.phone-wrap {
+  position: relative; z-index: 1;
+  display: flex; justify-content: center; align-items: center;
+  min-height: 100vh; padding: 24px;
+}
+
+.phone {
+  width: 390px;
+  height: 844px;
+  background: var(--bg);
+  border-radius: 48px;
+  box-shadow:
+    0 40px 100px rgba(0,0,0,.30),
+    0 0 0 1px rgba(0,0,0,.08),
+    inset 0 0 0 1px rgba(255,255,255,.06);
+  overflow: hidden;
+  position: relative;
+  display: flex; flex-direction: column;
+  flex-shrink: 0;
+}
+
+.screen {
+  flex: 1;
+  display: flex; flex-direction: column;
+  overflow: hidden;
+  background: var(--bg);
+}
+
+.notch {
+  width: 126px; height: 34px;
+  background: #111;
+  border-radius: 0 0 22px 22px;
+  margin: 0 auto;
+  flex-shrink: 0;
+}
+
+.status-bar {
+  display: flex; justify-content: space-between; align-items: center;
+  padding: 4px 24px 6px;
+  font-size: 12px; font-weight: 600;
+  flex-shrink: 0;
+}
+.status-right { display: flex; gap: 6px; align-items: center; }
+
+/* ====== View stack ====== */
+.view-stack {
+  flex: 1; display: flex; flex-direction: column;
+  overflow: hidden;
+  position: relative;
+}
+
+.view-stack.dir-1  { animation: slideInRight .22s cubic-bezier(.4,0,.2,1); }
+.view-stack.dir--1 { animation: slideInLeft  .22s cubic-bezier(.4,0,.2,1); }
+
+@keyframes slideInRight {
+  from { transform: translateX(28px); opacity: 0; }
+  to   { transform: translateX(0);    opacity: 1; }
+}
+@keyframes slideInLeft {
+  from { transform: translateX(-28px); opacity: 0; }
+  to   { transform: translateX(0);     opacity: 1; }
+}
+
+/* ====== Scroll ====== */
+.scroll {
+  flex: 1; overflow-y: auto; overflow-x: hidden;
+  -webkit-overflow-scrolling: touch;
+  padding-bottom: 16px;
+}
+.scroll::-webkit-scrollbar { display: none; }
+
+/* ====== Bottom Nav ====== */
+.bnav {
+  display: flex; align-items: stretch;
+  background: var(--surface);
+  border-top: 1px solid var(--line);
+  padding: 8px 4px 20px;
+  flex-shrink: 0;
+}
+
+.bnav-btn {
+  flex: 1; display: flex; flex-direction: column; align-items: center; gap: 3px;
+  padding: 6px 2px;
+  background: none; border: none;
+  color: var(--muted); font-size: 10px; font-family: inherit;
+  cursor: pointer; transition: color .15s;
+}
+.bnav-btn.active { color: var(--accent); }
+
+.bnav-fab {
+  flex: 1; display: flex; justify-content: center; align-items: flex-start;
+  background: none; border: none; cursor: pointer; padding: 0;
+}
+
+.bnav-fab-inner {
+  width: 52px; height: 52px;
+  background: var(--accent); color: var(--accent-ink);
+  border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  margin-top: -20px;
+  box-shadow: 0 4px 14px rgba(0,0,0,.22);
+  transition: transform .15s, box-shadow .15s;
+}
+.bnav-fab:active .bnav-fab-inner {
+  transform: scale(0.95);
+  box-shadow: 0 2px 8px rgba(0,0,0,.18);
+}
+
+/* ====== Card ====== */
+.card {
+  background: var(--surface);
+  border-radius: var(--r);
+  padding: var(--pad);
+  margin: 0 var(--pad) 10px;
+  border: 1px solid var(--line);
+}
+.card-accent {
+  background: var(--accent); color: var(--accent-ink);
+  border-color: transparent;
+}
+.card-accent .muted { color: var(--accent-ink); opacity: .75; }
+.card-soft { background: var(--accent-soft); border-color: transparent; }
+
+/* ====== Page Header ====== */
+.page-header {
+  display: flex; align-items: center; gap: 8px;
+  padding: 12px var(--pad) 8px;
+  flex-shrink: 0;
+}
+.page-titles { flex: 1; text-align: center; min-width: 0; }
+.page-title { font-size: 16px; font-weight: 600; }
+.ph-action { display: flex; justify-content: flex-end; min-width: 36px; }
+
+/* ====== Buttons ====== */
+.icon-btn {
+  width: 36px; height: 36px;
+  background: none; border: none;
+  cursor: pointer; color: inherit;
+  display: flex; align-items: center; justify-content: center;
+  border-radius: 50%;
+  transition: background .15s;
+  flex-shrink: 0;
+}
+.icon-btn:hover { background: var(--line); }
+
+.btn {
+  display: flex; align-items: center; justify-content: center; gap: 6px;
+  width: 100%; padding: 12px 16px;
+  border: none; border-radius: var(--r);
+  font-family: inherit; font-size: 14px; font-weight: 500;
+  cursor: pointer; transition: opacity .15s, transform .1s;
+}
+.btn:disabled { opacity: .4; pointer-events: none; }
+.btn:active { transform: scale(0.98); }
+.btn.primary { background: var(--accent); color: var(--accent-ink); }
+.btn.ghost { background: var(--line); color: var(--text); }
+
+.quiet-btn {
+  background: none; border: none;
+  font-family: inherit; font-size: 13px; color: var(--accent);
+  cursor: pointer; padding: 4px 0;
+  display: inline-flex; align-items: center; gap: 6px;
+}
+.quiet-btn.danger { color: #C97A7A; }
+
+.link {
+  background: none; border: none;
+  font-family: inherit; font-size: 14px; color: var(--accent);
+  cursor: pointer; text-decoration: none;
+}
+.link.danger { color: #C97A7A; }
+.link.xsmall { font-size: 11px; }
+.danger { color: #C97A7A; }
+
+/* ====== Section Label ====== */
+.section-label {
+  display: flex; justify-content: space-between; align-items: center;
+  padding: 16px var(--pad) 6px;
+  font-size: 11px; font-weight: 600;
+  text-transform: uppercase; letter-spacing: .07em;
+  color: var(--muted);
+}
+.section-right { font-weight: 400; text-transform: none; letter-spacing: 0; }
+
+/* ====== Segment Control ====== */
+.seg {
+  display: flex; gap: 3px;
+  background: var(--line);
+  border-radius: calc(var(--r) + 2px);
+  padding: 3px;
+  margin: 0 var(--pad) 8px;
+}
+.seg.inline { margin: 8px 0; }
+.seg-btn {
+  flex: 1; padding: 7px 8px;
+  background: none; border: none;
+  border-radius: calc(var(--r) - 2px);
+  font-family: inherit; font-size: 13px; font-weight: 500;
+  cursor: pointer; color: var(--muted);
+  transition: background .15s, color .15s;
+  white-space: nowrap;
+}
+.seg-btn.active {
+  background: var(--surface); color: var(--text);
+  box-shadow: 0 1px 3px rgba(0,0,0,.1);
+}
+
+/* ====== Toast ====== */
+.toast {
+  position: absolute; bottom: 76px; left: var(--pad); right: var(--pad);
+  background: var(--text); color: var(--bg);
+  border-radius: var(--r); padding: 12px var(--pad);
+  display: flex; align-items: center; gap: 8px;
+  font-size: 13px;
+  box-shadow: 0 4px 16px rgba(0,0,0,.2);
+  animation: toastIn .2s ease;
+  z-index: 10;
+}
+.toast-msg { flex: 1; }
+.toast-undo {
+  background: none; border: none;
+  color: var(--accent-soft); font-family: inherit; font-size: 13px; font-weight: 500;
+  cursor: pointer;
+}
+.toast-close {
+  background: none; border: none; color: inherit; opacity: .6;
+  cursor: pointer; display: flex;
+}
+
+@keyframes toastIn {
+  from { transform: translateY(8px); opacity: 0; }
+  to   { transform: translateY(0);   opacity: 1; }
+}
+
+/* ====== Sheet ====== */
+.scrim {
+  position: absolute; inset: 0;
+  background: rgba(0,0,0,0); pointer-events: none;
+  transition: background .25s;
+  z-index: 20;
+}
+.scrim.in { background: rgba(0,0,0,.35); pointer-events: all; }
+
+.sheet {
+  position: absolute; left: 0; right: 0; bottom: 0;
+  background: var(--surface);
+  border-radius: var(--r) var(--r) 0 0;
+  transform: translateY(100%);
+  transition: transform .3s cubic-bezier(.4,0,.2,1);
+  z-index: 21;
+  max-height: 88%;
+  display: flex; flex-direction: column;
+}
+.sheet.in { transform: translateY(0); }
+
+.sheet-handle {
+  width: 36px; height: 4px;
+  background: var(--line);
+  border-radius: 2px;
+  margin: 10px auto 4px;
+  flex-shrink: 0;
+}
+.sheet-head {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 8px var(--pad) 10px;
+  flex-shrink: 0;
+}
+.sheet-title { font-size: 18px; }
+
+.sheet-body {
+  overflow-y: auto;
+  padding: 0 var(--pad) var(--pad);
+  -webkit-overflow-scrolling: touch;
+}
+.sheet-body::-webkit-scrollbar { display: none; }
+
+.sheet-divider {
+  display: flex; align-items: center; gap: 10px;
+  color: var(--muted); font-size: 11px;
+  padding: 12px 0;
+  text-transform: uppercase; letter-spacing: .06em;
+}
+.sheet-divider::before, .sheet-divider::after {
+  content: ''; flex: 1; height: 1px; background: var(--line);
+}
+
+/* ====== Log sheet ====== */
+.quick-mood-row { margin-bottom: 8px; }
+.quick-mood-label {
+  font-size: 11px; font-weight: 600;
+  text-transform: uppercase; letter-spacing: .07em;
+  color: var(--muted); margin-bottom: 8px;
+}
+.quick-mood-dots { display: flex; gap: 8px; justify-content: space-between; }
+
+.log-list { list-style: none; display: flex; flex-direction: column; gap: 0; }
+.log-row {
+  display: flex; align-items: center; gap: 12px;
+  width: 100%; background: none; border: none;
+  font-family: inherit; text-align: left;
+  padding: 10px 0; border-bottom: 1px solid var(--line);
+  cursor: pointer; color: inherit;
+  transition: opacity .15s;
+}
+.log-row:last-child { border-bottom: none; }
+.log-row:active { opacity: .7; }
+.log-ic {
+  width: 38px; height: 38px; border-radius: 10px;
+  display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0;
+}
+.log-meta { flex: 1; display: flex; flex-direction: column; gap: 2px; }
+.log-name { font-weight: 500; font-size: 14px; }
+.log-note { line-height: 1.3; }
+
+/* ====== Mood swatch ====== */
+.mood-swatch-btn {
+  background: none; border: none; cursor: pointer;
+  display: flex; flex-direction: column; align-items: center; gap: 4px;
+  padding: 4px;
+}
+.ms-dot {
+  width: var(--sz, 28px); height: var(--sz, 28px);
+  border-radius: 50%;
+  background: var(--c, #999);
+  display: block;
+  transition: transform .15s, box-shadow .15s;
+}
+.mood-swatch-btn.selected .ms-dot {
+  box-shadow: 0 0 0 2px var(--surface), 0 0 0 4px var(--c);
+  transform: scale(1.1);
+}
+.ms-label { font-size: 10px; font-weight: 500; color: var(--muted); }
+.mood-swatch-btn.ringless .ms-dot { box-shadow: none; }
+
+/* ====== Sparkbars ====== */
+.sparkbars { display: flex; align-items: flex-end; gap: 2px; width: 100%; }
+.spark-col { flex: 1; display: flex; align-items: flex-end; height: 100%; }
+.spark-bar { width: 100%; border-radius: 2px; min-height: 4px; }
+
+/* ====== Utility ====== */
+.row { display: flex; }
+.between { justify-content: space-between; }
+.baseline { align-items: baseline; }
+.block { display: block; }
+.padded { padding: var(--pad); }
+.padded-x { padding-left: var(--pad); padding-right: var(--pad); }
+.empty { padding: 24px var(--pad); text-align: center; color: var(--muted); font-size: 13px; line-height: 1.6; }
+.mood-prompt { margin-bottom: 4px; padding-top: 8px; line-height: 1.5; }
+
+/* ====== Forms ====== */
+.form { display: flex; flex-direction: column; gap: 8px; }
+.form-l { display: block; margin-top: 4px; }
+.form-note { margin-top: 4px; display: flex; align-items: center; gap: 4px; }
+
+.text-input {
+  width: 100%; padding: 10px 12px;
+  background: var(--line); border: 1.5px solid transparent;
+  border-radius: calc(var(--r) * 0.7);
+  font-family: inherit; font-size: 14px; color: var(--text);
+  transition: border-color .15s, background .15s;
+}
+.text-input:focus {
+  outline: none;
+  border-color: var(--accent);
+  background: var(--surface);
+}
+
+.text-area {
+  width: 100%; padding: 10px 12px;
+  background: var(--line); border: 1.5px solid transparent;
+  border-radius: calc(var(--r) * 0.7);
+  font-family: inherit; font-size: 14px; color: var(--text);
+  resize: none; line-height: 1.5;
+  transition: border-color .15s, background .15s;
+}
+.text-area:focus {
+  outline: none;
+  border-color: var(--accent);
+  background: var(--surface);
+}
+.text-area.big { font-size: 15px; line-height: 1.6; }
+
+.slider {
+  -webkit-appearance: none;
+  width: 100%; height: 6px;
+  background: linear-gradient(to right, var(--c, var(--accent)) var(--p, 50%), var(--line) var(--p, 50%));
+  border-radius: 3px; border: none; outline: none; cursor: pointer;
+}
+.slider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  width: 20px; height: 20px; border-radius: 50%;
+  background: var(--c, var(--accent));
+  box-shadow: 0 2px 6px rgba(0,0,0,.2);
+  cursor: pointer;
+}
+
+/* Tags */
+.tag-row { display: flex; flex-wrap: wrap; gap: 6px; }
+.tag {
+  padding: 6px 12px; border-radius: 100px;
+  background: var(--line); border: 2px solid transparent;
+  font-family: inherit; font-size: 12px; font-weight: 500;
+  cursor: pointer; color: var(--muted);
+  transition: all .15s;
+}
+.tag.on { border-color: var(--accent); background: var(--accent-soft); color: var(--text); }
+
+/* ====== Today screen ====== */
+.today-header {
+  display: flex; align-items: flex-start; justify-content: space-between;
+  padding: 14px var(--pad) 10px;
+}
+.today-greeting { font-size: 26px; line-height: 1.2; margin-top: 2px; }
+
+.today-mood-card { }
+.today-mood-cta {
+  border: 2px dashed var(--accent-soft);
+  background: transparent;
+}
+.today-mood-dot {
+  width: 48px; height: 48px; border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.today-meds-card { cursor: pointer; transition: opacity .15s; }
+.today-meds-card:active { opacity: .8; }
+.today-meds-dots { display: flex; gap: 6px; align-items: center; }
+.today-med-dot {
+  width: 10px; height: 10px; border-radius: 50%;
+  background: var(--line);
+  transition: background .2s;
+}
+.today-med-dot.taken { background: var(--positive); }
+
+.today-stats {
+  display: flex; gap: 10px;
+  padding: 0 var(--pad); margin-bottom: 0;
+}
+.today-stats .card {
+  flex: 1; margin: 0 0 10px;
+  text-align: center; cursor: pointer;
+  transition: opacity .15s;
+}
+.today-stats .card:active { opacity: .8; }
+.stat-num { font-size: 28px; line-height: 1.1; }
+
+.today-actions { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 8px; }
+.action-chip {
+  display: flex; align-items: center; gap: 6px;
+  padding: 8px 14px;
+  background: var(--surface); border: 1px solid var(--line);
+  border-radius: 100px;
+  font-family: inherit; font-size: 13px; font-weight: 500;
+  cursor: pointer; color: var(--text);
+  transition: background .15s, transform .1s;
+}
+.action-chip:active { background: var(--line); transform: scale(0.97); }
+
+/* ====== Mood screen ====== */
+.wheel-wrap { padding: 4px var(--pad) 0; }
+.mood-selected {
+  display: flex; align-items: center; gap: 10px;
+  padding: 4px var(--pad) 4px;
+}
+.mood-sel-dot {
+  width: 20px; height: 20px; border-radius: 50%;
+  flex-shrink: 0;
+}
+
+/* ====== Care screen ====== */
+.adherence { }
+.ad-pct-sym { font-size: 20px; font-weight: 300; opacity: .7; }
+.ad-ring { flex-shrink: 0; }
+
+.med-row-card { padding: 12px var(--pad); }
+.med-row-inner { display: flex; align-items: center; gap: 12px; }
+.check {
+  width: 26px; height: 26px; border-radius: 50%;
+  border: 2px solid var(--line);
+  background: none;
+  display: flex; align-items: center; justify-content: center;
+  cursor: pointer; flex-shrink: 0;
+  transition: background .15s, border-color .15s;
+}
+.check.on { background: var(--positive); border-color: var(--positive); color: white; }
+.med-meta { flex: 1; min-width: 0; }
+.med-name { font-weight: 500; font-size: 14px; }
+.taken-stamp { color: var(--positive); margin-top: 2px; }
+.more {
+  background: none; border: none; color: var(--muted);
+  cursor: pointer; padding: 4px; display: flex;
+}
+.med-actions {
+  display: flex; flex-direction: column; gap: 4px;
+  padding-top: 10px; border-top: 1px solid var(--line);
+  margin-top: 10px;
+}
+
+.med-card { }
+.med-card-name { font-weight: 600; font-size: 15px; }
+.med-card-chips { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 8px; }
+.chip {
+  display: inline-flex; align-items: center; gap: 4px;
+  padding: 3px 8px; border-radius: 100px;
+  background: var(--line); font-size: 11px; font-weight: 500;
+}
+.chip-dot { width: 6px; height: 6px; border-radius: 50%; }
+.dot-good { background: var(--positive); }
+.warn-row {
+  display: flex; align-items: flex-start; gap: 6px;
+  margin-top: 8px; font-size: 12px; color: var(--muted);
+}
+
+.symp { }
+.symp-meta { flex: 1; min-width: 0; }
+.sev-controls { display: flex; align-items: center; gap: 6px; }
+.sev-btn {
+  width: 28px; height: 28px;
+  background: var(--line); border: none;
+  border-radius: 50%; font-size: 16px; line-height: 1;
+  cursor: pointer; display: flex; align-items: center; justify-content: center;
+  transition: background .15s;
+}
+.sev-btn:active { background: var(--accent-soft); }
+.sev-val { font-size: 15px; font-weight: 600; min-width: 36px; text-align: center; }
+.sev-bar {
+  height: 6px; background: var(--line);
+  border-radius: 3px; margin-top: 10px;
+  cursor: pointer; overflow: hidden;
+}
+.sev-fill { height: 100%; background: var(--accent); border-radius: 3px; transition: width .1s; }
+
+.quick-tags { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 8px; }
+.qtag {
+  padding: 5px 10px; border-radius: 100px;
+  background: var(--surface); border: 1px solid var(--line);
+  font-family: inherit; font-size: 12px; cursor: pointer;
+  color: var(--text); transition: background .15s;
+}
+.qtag:active { background: var(--line); }
+
+.tool-card { padding: 0; overflow: hidden; }
+.tool-row {
+  display: flex; align-items: center; gap: 12px;
+  width: 100%; background: none; border: none;
+  font-family: inherit; text-align: left;
+  padding: 12px var(--pad); cursor: pointer; color: inherit;
+  transition: background .15s;
+}
+.tool-row:active { background: var(--line); }
+.tk-ic {
+  width: 40px; height: 40px; border-radius: 10px;
+  display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0;
+}
+.tool-meta { flex: 1; display: flex; flex-direction: column; gap: 2px; }
+.tool-name { font-weight: 500; font-size: 14px; }
+.tool-time { font-size: 12px; color: var(--muted); font-weight: 500; flex-shrink: 0; }
+
+.crisis { border: 1px solid var(--line); }
+.crisis-row {
+  display: flex; align-items: center; gap: 12px;
+  padding: 8px 0;
+}
+.crisis-row + .crisis-row { border-top: 1px solid var(--line); }
+.crisis-ic {
+  width: 32px; height: 32px;
+  background: #C97A7A22; color: #C97A7A;
+  border-radius: 8px;
+  display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0;
+}
+
+.player-placeholder { text-align: center; padding: 32px 0; }
+
+.breath-stage {
+  display: flex; flex-direction: column; align-items: center;
+  padding: 20px 0;
+}
+.breath-orb {
+  width: 140px; height: 140px; border-radius: 50%;
+  background: var(--accent-soft);
+  transition: transform 1s ease-in-out;
+  margin-bottom: 24px;
+}
+.breath-text { text-align: center; }
+
+.ground-stage {
+  display: flex; flex-direction: column; align-items: center;
+  padding: 16px 0; text-align: center;
+}
+.ground-num { font-size: 80px; line-height: 1; color: var(--accent); }
+.ground-what { margin-top: 8px; }
+.ground-nav { display: flex; gap: 12px; margin-top: 24px; width: 100%; }
+.ground-nav .btn { flex: 1; }
+.ground-dots { display: flex; gap: 8px; margin-top: 20px; }
+.gd { width: 6px; height: 6px; border-radius: 50%; background: var(--line); transition: background .2s; }
+.gd.on { background: var(--accent); }
+
+/* ====== Journal screen ====== */
+.compose { margin-bottom: 10px; }
+
+.timeline { display: flex; flex-direction: column; }
+.t-row { display: flex; gap: 12px; }
+.t-rail {
+  display: flex; flex-direction: column; align-items: center;
+  width: 16px; flex-shrink: 0; padding-top: 5px;
+}
+.t-dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
+.t-line { flex: 1; width: 1px; background: var(--line); margin: 4px 0; min-height: 16px; }
+.t-card { flex: 1; padding-bottom: 16px; min-width: 0; }
+.entry-body { font-size: 14px; margin-top: 4px; line-height: 1.5; }
+.entry-tags { display: flex; gap: 4px; flex-wrap: wrap; margin-top: 6px; }
+.tag-readonly {
+  padding: 2px 8px; border-radius: 100px;
+  background: var(--line); font-size: 11px; color: var(--muted);
+}
+.entry-swatch { width: 14px; height: 14px; border-radius: 4px; flex-shrink: 0; margin-top: 2px; }
+
+/* ====== Insights screen ====== */
+.insight-hero { }
+.mood-bands {
+  display: flex; border-radius: 4px; overflow: hidden;
+  height: 8px; margin: 10px 0 6px; gap: 2px;
+}
+.mood-bands span { border-radius: 2px; }
+
+.dow-row { display: flex; gap: 8px; align-items: flex-end; }
+.dow { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 4px; }
+.dow-bar {
+  width: 100%; height: 64px;
+  background: var(--line); border-radius: 4px;
+  display: flex; align-items: flex-end; overflow: hidden;
+}
+.dow-bar span { width: 100%; border-radius: 4px; }
+.dow-l { font-size: 10px; color: var(--muted); font-weight: 500; }
+
+.insight { border-left: 3px solid var(--line); }
+.insight.good { border-left-color: var(--positive); }
+.insight.watch { border-left-color: var(--accent); }
+.ins-pill {
+  width: 28px; height: 28px; border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0;
+}
+.ins-pill.good { background: var(--positive); color: white; }
+.ins-pill.watch { background: var(--accent); color: var(--accent-ink); }
+
+.share-sent { display: flex; flex-direction: column; align-items: center; padding: 24px 0; text-align: center; }
+.share-check {
+  width: 56px; height: 56px; border-radius: 50%;
+  background: var(--positive); color: white;
+  display: flex; align-items: center; justify-content: center;
+  margin-bottom: 16px;
+}
+.include-list { display: flex; flex-direction: column; gap: 0; margin: 8px 0; }
+.include-row {
+  display: flex; align-items: center; gap: 12px;
+  padding: 10px 0; border-bottom: 1px solid var(--line);
+  background: none; border-left: none; border-right: none; border-top: none;
+  font-family: inherit; cursor: pointer; color: inherit; text-align: left;
+  transition: opacity .15s;
+}
+.include-row:last-child { border-bottom: none; }
+.incl-meta { flex: 1; display: flex; flex-direction: column; gap: 2px; }
+.incl-check {
+  width: 20px; height: 20px; border-radius: 50%;
+  border: 2px solid var(--line);
+  display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0; transition: background .15s, border-color .15s;
+}
+.incl-check.on { background: var(--accent); border-color: var(--accent); color: var(--accent-ink); }
+.share-foot { margin: 12px 0; display: flex; align-items: flex-start; gap: 6px; }
+
+/* ====== Settings screen ====== */
+.profile-summary { display: flex; align-items: center; gap: 12px; }
+.profile-avatar {
+  width: 48px; height: 48px; border-radius: 50%;
+  background: var(--accent-soft);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 20px; flex-shrink: 0; color: var(--accent);
+}
+
+.settings-group { margin-bottom: 4px; }
+.settings-card { padding: 0; }
+.settings-row {
+  display: flex; align-items: center; gap: 12px;
+  width: 100%; background: none; border: none;
+  font-family: inherit; cursor: pointer; color: inherit;
+  padding: 12px var(--pad); text-align: left;
+  border-bottom: 1px solid var(--line);
+  transition: background .15s;
+}
+.settings-row:last-child { border-bottom: none; }
+.settings-row:active { background: var(--line); }
+.settings-ic {
+  width: 32px; height: 32px; border-radius: 8px;
+  background: var(--line); color: var(--muted);
+  display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0;
+}
+.settings-meta { flex: 1; display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.settings-l { font-weight: 500; font-size: 14px; }
+.settings-foot { text-align: center; padding: 24px var(--pad) 32px; }
+
+.toggle {
+  width: 44px; height: 26px;
+  background: var(--line); border: none;
+  border-radius: 13px; padding: 3px;
+  cursor: pointer; transition: background .2s;
+  display: flex; align-items: center;
+  flex-shrink: 0;
+}
+.toggle.on { background: var(--accent); }
+.toggle-knob {
+  width: 20px; height: 20px; border-radius: 50%;
+  background: white;
+  transform: translateX(0);
+  transition: transform .2s;
+  display: block;
+}
+.toggle.on .toggle-knob { transform: translateX(18px); }
+
+.rem-card { display: flex; flex-direction: column; gap: 8px; }
+.time-chips { display: flex; flex-wrap: wrap; gap: 6px; margin: 4px 0; }
+.time-chip {
+  padding: 5px 12px; border-radius: 100px;
+  background: var(--surface); border: 1px solid var(--line);
+  font-family: inherit; font-size: 12px; font-weight: 500;
+  cursor: pointer; color: var(--muted);
+  transition: all .15s;
+}
+.time-chip.on { background: var(--accent); border-color: var(--accent); color: var(--accent-ink); }
+.rem-detail { display: flex; flex-direction: column; gap: 6px; padding-top: 8px; border-top: 1px solid var(--line); }
+.rem-row { display: flex; justify-content: space-between; font-size: 13px; }
+.quiet-row { display: flex; align-items: center; gap: 16px; padding-top: 8px; }
+.quiet-block { display: flex; flex-direction: column; gap: 2px; }
+.quiet-line { flex: 1; height: 1px; background: var(--line); }
+.onboard-toggle {
+  display: flex; align-items: flex-start; justify-content: space-between; gap: 12px;
+  padding: 12px 0; border-bottom: 1px solid var(--line);
+}
+.onboard-toggle:last-child { border-bottom: none; }
+.callout {
+  display: flex; align-items: flex-start; gap: 8px;
+  background: var(--line); border-radius: var(--r);
+  padding: 12px; font-size: 12px; color: var(--muted);
+  margin: 8px 0; line-height: 1.5;
+}
+
+/* ====== History / Calendar ====== */
+.month-nav {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 8px var(--pad);
+}
+.month-name { }
+.dow-head {
+  display: grid; grid-template-columns: repeat(7, 1fr);
+  padding: 0 var(--pad); margin-bottom: 4px;
+  text-align: center;
+  font-size: 11px; font-weight: 600; color: var(--muted);
+}
+.dow-head span { padding: 4px 0; }
+.cal-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 2px; padding: 0 var(--pad); }
+.cal-cell {
+  aspect-ratio: 1;
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  background: none; border: none;
+  border-radius: calc(var(--r) / 2);
+  cursor: pointer; font-family: inherit; font-size: 13px;
+  gap: 2px; padding: 2px;
+  transition: background .15s;
+}
+.cal-cell:active { background: var(--line); }
+.cal-cell.today { background: var(--line); font-weight: 600; }
+.cal-cell.sel { background: var(--accent); color: var(--accent-ink); }
+.cal-cell.sel .cal-d { color: var(--accent-ink); }
+.cal-empty { pointer-events: none; cursor: default; }
+.cal-d { line-height: 1; }
+.cal-dot { width: 5px; height: 5px; border-radius: 50%; }
+.cal-legend { display: flex; gap: 12px; flex-wrap: wrap; padding: var(--pad); }
+.legend-item { display: flex; align-items: center; gap: 4px; font-size: 11px; color: var(--muted); }
+.legend-sw { width: 10px; height: 10px; border-radius: 50%; display: inline-block; }
+.about-card { margin-bottom: 10px; }
+
+/* ====== Onboarding ====== */
+.onboard-stage {
+  flex: 1; display: flex; flex-direction: column;
+  padding-bottom: 24px; overflow: hidden;
+}
+.onboard-top {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 12px var(--pad);
+}
+.onboard-dots { display: flex; gap: 5px; }
+.od {
+  width: 6px; height: 6px; border-radius: 50%;
+  background: var(--line); transition: all .25s;
+}
+.od.on { background: var(--accent); width: 18px; border-radius: 3px; }
+.od.done { background: var(--accent-soft); }
+.skip-link {
+  background: none; border: none;
+  font-family: inherit; font-size: 13px; color: var(--muted);
+  cursor: pointer;
+}
+
+.onboard-body {
+  flex: 1; overflow-y: auto; padding: 0 var(--pad);
+  -webkit-overflow-scrolling: touch;
+}
+.onboard-body::-webkit-scrollbar { display: none; }
+
+.onboard-foot {
+  padding: var(--pad); padding-top: 12px;
+  display: flex; flex-direction: column;
+}
+
+.welcome {
+  display: flex; flex-direction: column; align-items: center;
+  text-align: center; padding: 20px 0;
+}
+.welcome-mark { margin-bottom: 20px; }
+.welcome-title { font-size: 40px; margin-bottom: 8px; }
+.welcome-tag { font-size: 18px; margin-bottom: 12px; font-style: italic; }
+.welcome-sub { color: var(--muted); font-size: 14px; line-height: 1.6; }
+
+.step { padding: 12px 0; }
+.step-title { font-size: 26px; line-height: 1.2; margin-bottom: 8px; }
+.step-sub { color: var(--muted); font-size: 14px; margin-bottom: 20px; line-height: 1.5; }
+
+.big-input {
+  width: 100%; padding: 14px 0;
+  background: none; border: none; border-bottom: 2px solid var(--line);
+  font-family: 'Instrument Serif', Georgia, serif;
+  font-size: 28px; color: var(--text);
+  margin-bottom: 16px;
+  transition: border-color .2s;
+}
+.big-input:focus { outline: none; border-bottom-color: var(--accent); }
+.big-input::placeholder { color: var(--muted); }
+
+.reason-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.reason {
+  display: flex; flex-direction: column; align-items: flex-start;
+  padding: 12px; border-radius: var(--r);
+  background: var(--surface); border: 2px solid var(--line);
+  font-family: inherit; cursor: pointer; text-align: left;
+  transition: border-color .15s, background .15s;
+  position: relative;
+}
+.reason.on { border-color: var(--accent); background: var(--accent-soft); }
+.reason-glyph { font-size: 20px; margin-bottom: 4px; }
+.reason-l { font-size: 13px; font-weight: 500; }
+.reason-check {
+  position: absolute; top: 8px; right: 8px;
+  width: 18px; height: 18px; border-radius: 50%;
+  border: 2px solid var(--line);
+  display: flex; align-items: center; justify-content: center;
+  transition: all .15s;
+}
+.reason-check.on { background: var(--accent); border-color: var(--accent); color: var(--accent-ink); }
+
+.promise-list { list-style: none; display: flex; flex-direction: column; gap: 12px; margin: 16px 0; }
+.promise-list li { display: flex; align-items: flex-start; gap: 10px; font-size: 14px; line-height: 1.5; }
+.promise-ic {
+  width: 28px; height: 28px; border-radius: 8px;
+  background: var(--accent-soft); color: var(--accent);
+  display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0;
+}
+
+.consent-row {
+  display: flex; align-items: flex-start; gap: 10px;
+  background: none; border: none;
+  font-family: inherit; font-size: 13px; text-align: left;
+  cursor: pointer; padding: 12px 0; color: var(--text);
+  line-height: 1.5;
+}
+
+.ready { }
+.ready-mark { margin-bottom: 16px; }
+.ready-summary {
+  background: var(--surface); border: 1px solid var(--line);
+  border-radius: var(--r); overflow: hidden; margin-top: 20px;
+}
+.rs-row {
+  display: flex; justify-content: space-between; align-items: flex-start;
+  padding: 10px var(--pad); border-bottom: 1px solid var(--line);
+}
+.rs-row:last-child { border-bottom: none; }
+.rs-l { font-size: 12px; color: var(--muted); }
+.rs-v { font-size: 13px; font-weight: 500; text-align: right; flex: 1; margin-left: 12px; }
+
+/* ====== Tweaks panel ====== */
+.tweaks-fab {
+  position: fixed; bottom: 24px; right: 24px;
+  width: 44px; height: 44px;
+  background: var(--text); color: var(--bg);
+  border: none; border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  cursor: pointer; z-index: 100;
+  box-shadow: 0 4px 12px rgba(0,0,0,.25);
+  transition: transform .15s;
+}
+.tweaks-fab:hover { transform: scale(1.05); }
+
+.tweaks-panel {
+  position: fixed; right: 16px; bottom: 76px;
+  width: 280px; max-height: 60vh;
+  background: var(--surface); border: 1px solid var(--line);
+  border-radius: var(--r);
+  box-shadow: 0 8px 32px rgba(0,0,0,.2);
+  z-index: 99;
+  display: flex; flex-direction: column;
+  overflow: hidden;
+}
+
+.tweaks-header {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 12px 16px 10px;
+  border-bottom: 1px solid var(--line);
+  flex-shrink: 0;
+}
+.tweaks-title {
+  font-size: 10px; font-weight: 600;
+  text-transform: uppercase; letter-spacing: .08em;
+  color: var(--muted);
+}
+.tweaks-close {
+  background: none; border: none;
+  font-size: 20px; cursor: pointer; color: var(--muted);
+  line-height: 1; padding: 0; display: flex; align-items: center;
+}
+
+.tweaks-body { overflow-y: auto; padding: 8px 0; }
+.tweaks-body::-webkit-scrollbar { display: none; }
+
+.tweak-section {
+  padding: 8px 16px;
+  border-bottom: 1px solid var(--line);
+}
+.tweak-section:last-child { border-bottom: none; }
+.tweak-section-title {
+  font-size: 10px; font-weight: 600;
+  text-transform: uppercase; letter-spacing: .08em;
+  color: var(--muted); margin-bottom: 8px;
+}
+
+.tweak-row {
+  display: flex; align-items: center; justify-content: space-between;
+  gap: 8px; margin-bottom: 6px;
+}
+.tweak-row.col { flex-direction: column; align-items: flex-start; }
+.tweak-label { font-size: 13px; font-weight: 500; }
+
+.tweak-radio-group { display: flex; gap: 3px; }
+.tweak-radio-btn {
+  padding: 4px 10px; border-radius: 6px;
+  background: var(--line); border: none;
+  font-family: inherit; font-size: 12px; cursor: pointer; color: var(--muted);
+  transition: all .15s;
+}
+.tweak-radio-btn.active { background: var(--accent); color: var(--accent-ink); }
+
+.tweak-action-btn {
+  width: 100%; padding: 7px 12px;
+  background: var(--accent); color: var(--accent-ink);
+  border: none; border-radius: 8px;
+  font-family: inherit; font-size: 13px; font-weight: 500;
+  cursor: pointer; margin-bottom: 4px;
+  transition: opacity .15s;
+}
+.tweak-action-btn.secondary { background: var(--line); color: var(--text); }
+.tweak-action-btn:active { opacity: .8; }
+
+.tweak-input {
+  width: 100%; padding: 7px 10px;
+  background: var(--line); border: none;
+  border-radius: 8px;
+  font-family: inherit; font-size: 13px; color: var(--text);
+}
+.tweak-input:focus { outline: none; }
+
+.tweak-nav-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 4px; margin-bottom: 6px; }
+.tweak-nav-btn {
+  padding: 6px 8px;
+  background: var(--line); border: none;
+  border-radius: 6px;
+  font-family: inherit; font-size: 12px; cursor: pointer;
+  color: var(--muted); transition: all .15s;
+}
+.tweak-nav-btn.active { background: var(--accent); color: var(--accent-ink); }
+
+.tweak-color-row { display: flex; gap: 6px; width: 100%; }
+.color-swatch {
+  flex: 1; display: flex; flex-direction: column; align-items: center; gap: 4px;
+  padding: 6px 4px;
+  background: none; border: 2px solid var(--line);
+  border-radius: 8px; cursor: pointer; transition: border-color .15s;
+}
+.color-swatch.selected { border-color: var(--accent); }
+.cs-main { width: 100%; height: 22px; border-radius: 4px; display: block; }
+.cs-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 2px; width: 100%; }
+.cs-grid span { height: 10px; border-radius: 2px; display: block; }
+.cs-name { font-size: 9px; color: var(--muted); font-weight: 500; }
+
+/* ====== Responsive ====== */
+@media (max-width: 440px) {
+  .phone { width: 100%; height: 100dvh; border-radius: 0; }
+  .phone-wrap { padding: 0; min-height: 100dvh; }
+  .tweaks-panel { right: 8px; left: 8px; width: auto; }
+}
+
+</style>
+</head>
+<body>
+<div id="root"></div>
+
+<script src="https://unpkg.com/react@18.3.1/umd/react.development.js" crossorigin></script>
+<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" crossorigin></script>
+<script src="https://unpkg.com/@babel/standalone@7.25.9/babel.min.js" crossorigin></script>
+
+<script type="text/babel">
+/* Daily v2 — Tweaks panel (design-time controls) */
+const { useState: useState_T } = React;
+
+function useTweaks(defaults) {
+  const [tweaks, setTweaksRaw] = useState_T(() => {
+    try {
+      const saved = JSON.parse(localStorage.getItem("daily-tweaks") || "{}");
+      return { ...defaults, ...saved };
+    } catch { return { ...defaults }; }
+  });
+  const setTweak = (k, v) => {
+    setTweaksRaw(prev => {
+      const next = { ...prev, [k]: v };
+      try { localStorage.setItem("daily-tweaks", JSON.stringify(next)); } catch {}
+      return next;
+    });
+  };
+  return [tweaks, setTweak];
+}
+
+function TweaksPanel({ title, children }) {
+  const [open, setOpen] = useState_T(false);
+  return (
+    <>
+      <button className="tweaks-fab" onClick={() => setOpen(o => !o)} title={title} aria-label="Open tweaks">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <circle cx="12" cy="12" r="3"/>
+          <path d="M12 2v3M12 19v3M4.2 4.2l2.1 2.1M17.7 17.7l2.1 2.1M2 12h3M19 12h3M4.2 19.8l2.1-2.1M17.7 6.3l2.1-2.1"/>
+        </svg>
+      </button>
+      {open && (
+        <div className="tweaks-panel">
+          <div className="tweaks-header">
+            <span className="tweaks-title">{title}</span>
+            <button className="tweaks-close" onClick={() => setOpen(false)} aria-label="Close tweaks">×</button>
+          </div>
+          <div className="tweaks-body">{children}</div>
+        </div>
+      )}
+    </>
+  );
+}
+
+const TweakSection = ({ title, children }) => (
+  <div className="tweak-section">
+    <div className="tweak-section-title">{title}</div>
+    {children}
+  </div>
+);
+
+const TweakButton = ({ label, onClick, secondary }) => (
+  <button className={`tweak-action-btn ${secondary ? "secondary" : ""}`} onClick={onClick}>{label}</button>
+);
+
+const TweakRadio = ({ label, value, onChange, options }) => (
+  <div className="tweak-row">
+    <span className="tweak-label">{label}</span>
+    <div className="tweak-radio-group">
+      {options.map(o => (
+        <button key={o} className={`tweak-radio-btn ${value === o ? "active" : ""}`} onClick={() => onChange(o)}>{o}</button>
+      ))}
+    </div>
+  </div>
+);
+
+const TweakText = ({ label, value, onChange, placeholder }) => (
+  <div className="tweak-row col">
+    <span className="tweak-label">{label}</span>
+    <input
+      className="tweak-input"
+      value={value || ""}
+      onChange={e => onChange(e.target.value)}
+      placeholder={placeholder}
+    />
+  </div>
+);
+
+Object.assign(window, { useTweaks, TweaksPanel, TweakSection, TweakButton, TweakRadio, TweakText });
+
+</script>
+<script type="text/babel">
+/* Lucide-style stroke icons, sized via fontSize / currentColor inheritance */
+const Icon = ({ children, size = 20, sw = 2, ...rest }) => (
+  <svg
+    viewBox="0 0 24 24"
+    width={size}
+    height={size}
+    fill="none"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+    {...rest}
+    stroke="currentColor"
+    strokeWidth={sw}
+  >
+    {children}
+  </svg>
+);
+
+const IconHome = (p) => <Icon {...p}><path d="M3 11.5L12 4l9 7.5"/><path d="M5 10.5V20h14V10.5"/></Icon>;
+const IconPill = (p) => <Icon {...p}><rect x="3" y="9" width="18" height="6" rx="3" transform="rotate(-30 12 12)"/><path d="M8.5 7.5l7 7" /></Icon>;
+const IconHeart = (p) => <Icon {...p}><path d="M12 20s-7-4.5-7-10a4 4 0 017-2.6A4 4 0 0119 10c0 5.5-7 10-7 10z"/></Icon>;
+const IconLeaf = (p) => <Icon {...p}><path d="M4 20c0-8 6-14 16-14 0 10-6 16-14 16-2 0-2-2-2-2z"/><path d="M4 20l9-9"/></Icon>;
+const IconRun = (p) => <Icon {...p}><circle cx="13" cy="4.5" r="1.6"/><path d="M5.5 13l3-3 3 1 2 4 3 2"/><path d="M4 19l3-2 2-5"/></Icon>;
+const IconChart = (p) => <Icon {...p}><path d="M3 20h18"/><path d="M6 16V9"/><path d="M11 16V5"/><path d="M16 16v-4"/><path d="M21 16v-8"/></Icon>;
+const IconBack = (p) => <Icon {...p} sw={2.4}><path d="M15 5l-7 7 7 7"/></Icon>;
+const IconCheck = (p) => <Icon {...p} sw={2.6}><path d="M4 12l5 5L20 6"/></Icon>;
+const IconPlus = (p) => <Icon {...p} sw={2.4}><path d="M12 5v14M5 12h14"/></Icon>;
+const IconSearch = (p) => <Icon {...p}><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></Icon>;
+const IconCamera = (p) => <Icon {...p}><path d="M4 8h3l1.5-2h7L17 8h3v11H4z"/><circle cx="12" cy="13" r="3.5"/></Icon>;
+const IconSettings = (p) => <Icon {...p}><circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M4.2 4.2l2.1 2.1M17.7 17.7l2.1 2.1M2 12h3M19 12h3M4.2 19.8l2.1-2.1M17.7 6.3l2.1-2.1"/></Icon>;
+const IconBell = (p) => <Icon {...p}><path d="M6 16V11a6 6 0 1112 0v5l1.5 2.5h-15z"/><path d="M10 20a2 2 0 004 0"/></Icon>;
+const IconMoon = (p) => <Icon {...p}><path d="M20 14.5A8 8 0 119.5 4 6.5 6.5 0 0020 14.5z"/></Icon>;
+const IconDrop = (p) => <Icon {...p}><path d="M12 3s-6 7-6 11a6 6 0 0012 0c0-4-6-11-6-11z"/></Icon>;
+const IconFlame = (p) => <Icon {...p}><path d="M12 3c1 4 5 5 5 10a5 5 0 11-10 0c0-2 1-3 2-4-1 4 3 4 3 1 0-2-1-4 0-7z"/></Icon>;
+const IconActivity = (p) => <Icon {...p}><path d="M3 12h4l2-6 4 12 2-6h6"/></Icon>;
+const IconMore = (p) => <Icon {...p}><circle cx="5" cy="12" r="1.4"/><circle cx="12" cy="12" r="1.4"/><circle cx="19" cy="12" r="1.4"/></Icon>;
+const IconChevR = (p) => <Icon {...p} sw={2.2}><path d="M9 5l7 7-7 7"/></Icon>;
+const IconClock = (p) => <Icon {...p}><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></Icon>;
+const IconSparkle = (p) => <Icon {...p} sw={1.8}><path d="M12 4l1.6 5.2L19 11l-5.4 1.8L12 18l-1.6-5.2L5 11l5.4-1.8z"/></Icon>;
+const IconAlert = (p) => <Icon {...p}><path d="M12 3l10 17H2z"/><path d="M12 10v4M12 17.5v.1"/></Icon>;
+const IconShare = (p) => <Icon {...p}><path d="M12 3v13"/><path d="M7 8l5-5 5 5"/><path d="M5 14v6h14v-6"/></Icon>;
+const IconLock = (p) => <Icon {...p}><rect x="4.5" y="10.5" width="15" height="10" rx="2"/><path d="M8 10.5V7a4 4 0 018 0v3.5"/></Icon>;
+const IconUser = (p) => <Icon {...p}><circle cx="12" cy="8" r="4"/><path d="M4 21c1.5-4 5-6 8-6s6.5 2 8 6"/></Icon>;
+const IconFingerprint = (p) => <Icon {...p} sw={1.8}><path d="M6 12a6 6 0 0112 0v2"/><path d="M9 12a3 3 0 016 0v3a3 3 0 003 3"/><path d="M9 19c0-2 0-3 .5-5"/><path d="M4 15c0-5 4-9 8-9 1.5 0 3 .4 4 1"/></Icon>;
+const IconWalk = (p) => <Icon {...p}><circle cx="13" cy="4.5" r="1.6"/><path d="M7 21l3-7 4-2-2-5 5 4 1 4"/></Icon>;
+const IconCycle = (p) => <Icon {...p}><circle cx="5.5" cy="17.5" r="3"/><circle cx="18.5" cy="17.5" r="3"/><path d="M5.5 17.5l4-7h4l3 7"/><path d="M9 7l3-2"/></Icon>;
+const IconSwim = (p) => <Icon {...p}><path d="M2 16q2-2 4 0t4 0 4 0 4 0 4 0"/><path d="M2 20q2-2 4 0t4 0 4 0 4 0 4 0"/><circle cx="17" cy="6" r="2"/><path d="M9 12l3-3 4 2"/></Icon>;
+const IconYoga = (p) => <Icon {...p}><circle cx="12" cy="4.5" r="1.6"/><path d="M5 11h14"/><path d="M12 11v4"/><path d="M8 20l4-5 4 5"/></Icon>;
+const IconGarden = (p) => <Icon {...p}><path d="M12 20V10"/><path d="M12 10c-3 0-5-2-5-5 3 0 5 2 5 5z"/><path d="M12 12c3 0 5-2 5-5-3 0-5 2-5 5z"/></Icon>;
+const IconBroom = (p) => <Icon {...p}><path d="M14 4l6 6"/><path d="M13 7l4 4"/><path d="M5 20l8-10 4 4-8 10z"/></Icon>;
+
+/* Mental-health additions */
+const IconBreath = (p) => <Icon {...p}><circle cx="12" cy="12" r="3"/><circle cx="12" cy="12" r="7" opacity="0.5"/><circle cx="12" cy="12" r="11" opacity="0.25"/></Icon>;
+const IconGround = (p) => <Icon {...p}><path d="M3 16h18"/><path d="M5 16v-3"/><path d="M9 16v-5"/><path d="M13 16v-7"/><path d="M17 16v-4"/><path d="M21 16v-6"/></Icon>;
+const IconJournal = (p) => <Icon {...p}><path d="M5 3h12a2 2 0 012 2v16l-3-2-3 2-3-2-3 2-2-2V5a2 2 0 012-2z"/><path d="M9 8h6M9 12h6M9 16h4"/></Icon>;
+const IconInsight = (p) => <Icon {...p}><path d="M12 3a7 7 0 014 12.7V18a1 1 0 01-1 1H9a1 1 0 01-1-1v-2.3A7 7 0 0112 3z"/><path d="M10 21h4"/></Icon>;
+const IconToolkit = (p) => <Icon {...p}><rect x="3" y="8" width="18" height="12" rx="2"/><path d="M9 8V6a2 2 0 012-2h2a2 2 0 012 2v2"/><path d="M3 13h18"/></Icon>;
+const IconSmileSoft = (p) => <Icon {...p}><circle cx="12" cy="12" r="9"/><circle cx="9" cy="10" r="0.6" fill="currentColor"/><circle cx="15" cy="10" r="0.6" fill="currentColor"/><path d="M9 14.5c.6 1 1.7 1.5 3 1.5s2.4-.5 3-1.5"/></Icon>;
+const IconSendUp = (p) => <Icon {...p}><path d="M12 21V4"/><path d="M5 11l7-7 7 7"/></Icon>;
+const IconClose = (p) => <Icon {...p} sw={2.2}><path d="M6 6l12 12M18 6l-12 12"/></Icon>;
+const IconShield = (p) => <Icon {...p}><path d="M12 3l8 3v6c0 5-4 8-8 9-4-1-8-4-8-9V6z"/></Icon>;
+const IconPhone = (p) => <Icon {...p}><path d="M5 4h3l2 5-2 1c1 3 3 5 6 6l1-2 5 2v3a2 2 0 01-2 2c-9 0-15-6-15-15a2 2 0 012-2z"/></Icon>;
+const IconWave = (p) => <Icon {...p}><path d="M2 14q2-3 4 0t4 0 4 0 4 0 4 0"/><path d="M2 9q2-3 4 0t4 0 4 0 4 0 4 0"/></Icon>;
+const IconEye = (p) => <Icon {...p}><path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/></Icon>;
+const IconCalendar = (p) => <Icon {...p}><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 9h18"/><path d="M8 3v4M16 3v4"/></Icon>;
+const IconShareTherapist = (p) => <Icon {...p}><circle cx="12" cy="8" r="3"/><path d="M5 21c1-4 4-6 7-6s6 2 7 6"/><circle cx="18" cy="6" r="3"/></Icon>;
+
+Object.assign(window, {
+  Icon, IconHome, IconPill, IconHeart, IconLeaf, IconRun, IconChart, IconBack, IconCheck, IconPlus,
+  IconSearch, IconCamera, IconSettings, IconBell, IconMoon, IconDrop, IconFlame, IconActivity,
+  IconMore, IconChevR, IconClock, IconSparkle, IconAlert, IconShare, IconLock, IconUser,
+  IconFingerprint, IconWalk, IconCycle, IconSwim, IconYoga, IconGarden, IconBroom,
+  IconBreath, IconGround, IconJournal, IconInsight, IconToolkit, IconSmileSoft,
+  IconSendUp, IconClose, IconShield, IconPhone, IconWave, IconEye, IconCalendar, IconShareTherapist,
+});
+
+</script>
+<script type="text/babel">
+/* Daily v2 — progressive mood wheel
+   Interaction model:
+   1. Default view: 6 cores in inner ring, outer secondaries dimmed
+   2. Tap a core: it "blooms" — that core's secondaries become fully visible,
+      others fade to thin ghost ring
+   3. Tap an outer secondary: selected (held with subtle border + filled center)
+   4. Tap center: collapse back to overview / clear selection */
+
+const MOOD_CORES = [
+  { id: "joyful",  label: "Joyful",  color: "#D7A65C", secondary: ["Hopeful", "Playful", "Proud", "Content", "Grateful", "Open"] },
+  { id: "tender",  label: "Tender",  color: "#C97A7A", secondary: ["Loving", "Soft", "Caring", "Warm", "Trusting", "Held"] },
+  { id: "calm",    label: "Calm",    color: "#7AA68B", secondary: ["Peaceful", "Rested", "Steady", "Settled", "Quiet", "Centered"] },
+  { id: "sad",     label: "Sad",     color: "#7B8FA8", secondary: ["Lonely", "Hurt", "Heavy", "Empty", "Tired", "Withdrawn"] },
+  { id: "anxious", label: "Anxious", color: "#9C7BA7", secondary: ["Worried", "Nervous", "Restless", "Overwhelmed", "Scared", "Trapped"] },
+  { id: "angry",   label: "Angry",   color: "#B86A55", secondary: ["Frustrated", "Irritated", "Resentful", "Provoked", "Bitter", "Hostile"] },
+];
+
+function MoodWheel({ value, onChange }) {
+  const N = MOOD_CORES.length;
+  const M = 6;
+  const innerR = 56;
+  const outerR = 158;
+  const slice = (2 * Math.PI) / N;
+  const outerSlice = (2 * Math.PI) / (N * M);
+
+  const polar = (r, a) => [Math.cos(a) * r, Math.sin(a) * r];
+  const arcPath = (r0, r1, a0, a1) => {
+    const [x0, y0] = polar(r1, a0);
+    const [x1, y1] = polar(r1, a1);
+    const [x2, y2] = polar(r0, a1);
+    const [x3, y3] = polar(r0, a0);
+    const large = a1 - a0 > Math.PI ? 1 : 0;
+    return `M ${x0} ${y0} A ${r1} ${r1} 0 ${large} 1 ${x1} ${y1} L ${x2} ${y2} A ${r0} ${r0} 0 ${large} 0 ${x3} ${y3} Z`;
+  };
+
+  const start = -Math.PI / 2 - slice / 2;
+  const focused = value?.coreId || null;
+
+  const tapCore = (coreId) => {
+    if (focused === coreId) {
+      onChange(null);
+    } else {
+      onChange({ coreId, secondary: null });
+    }
+  };
+
+  const tapSecondary = (coreId, sec) => onChange({ coreId, secondary: sec });
+
+  return (
+    <svg viewBox="-180 -180 360 360" style={{ width: "100%", maxWidth: 320, height: "auto", display: "block" }}>
+      <defs>
+        <radialGradient id="wheelGlow" cx="50%" cy="50%" r="50%">
+          <stop offset="40%" stopColor="white" stopOpacity="0"/>
+          <stop offset="100%" stopColor="white" stopOpacity="0.08"/>
+        </radialGradient>
+      </defs>
+
+      {/* Outer ring */}
+      {MOOD_CORES.map((core, ci) => {
+        const a0Core = start + ci * slice;
+        const isFocused = focused === core.id;
+        const isOther = focused && !isFocused;
+        return core.secondary.map((sec, si) => {
+          const a0 = a0Core + si * outerSlice;
+          const a1 = a0 + outerSlice;
+          const selected = value && value.coreId === core.id && value.secondary === sec;
+          const mid = (a0 + a1) / 2;
+          const [tx, ty] = polar((innerR + outerR) / 2 + 4, mid);
+          const rotDeg = (mid * 180) / Math.PI + 90;
+          const flip = rotDeg > 90 && rotDeg < 270;
+          let opacity = 0.55;
+          if (isFocused) opacity = selected ? 1 : 0.85;
+          if (isOther) opacity = 0.14;
+          const r0 = innerR + (isFocused ? 4 : 6);
+          const r1 = outerR + (isFocused ? 4 : 0);
+          return (
+            <g key={core.id + sec} onClick={() => tapSecondary(core.id, sec)} style={{ cursor: "pointer", transition: "opacity 320ms" }}>
+              <path
+                d={arcPath(r0, r1, a0 + 0.005, a1 - 0.005)}
+                fill={core.color}
+                opacity={opacity}
+                stroke={selected ? "var(--surface)" : "transparent"}
+                strokeWidth={selected ? 2 : 0}
+                style={{ transition: "opacity 320ms, filter 320ms" }}
+                filter={selected ? "drop-shadow(0 2px 6px rgba(0,0,0,.18))" : undefined}
+              />
+              {(isFocused || !focused) && (
+                <text
+                  x={tx} y={ty}
+                  transform={`rotate(${flip ? rotDeg + 180 : rotDeg} ${tx} ${ty})`}
+                  fontSize={isFocused ? "9" : "7.5"}
+                  fontWeight={isFocused ? "600" : "500"}
+                  fill="#FBF5EC"
+                  textAnchor="middle"
+                  dominantBaseline="middle"
+                  style={{ pointerEvents: "none", letterSpacing: 0.2, transition: "font-size 320ms" }}
+                  opacity={isOther ? 0 : 1}
+                >{sec}</text>
+              )}
+            </g>
+          );
+        });
+      })}
+
+      {/* Soft inner glow ring */}
+      <circle cx="0" cy="0" r={innerR + 1} fill="url(#wheelGlow)" pointerEvents="none"/>
+
+      {/* Inner ring — cores */}
+      {MOOD_CORES.map((core, ci) => {
+        const a0 = start + ci * slice;
+        const a1 = a0 + slice;
+        const mid = (a0 + a1) / 2;
+        const [tx, ty] = polar(innerR * 0.6, mid);
+        const isFocused = focused === core.id;
+        const dim = focused && !isFocused;
+        return (
+          <g key={core.id} onClick={() => tapCore(core.id)} style={{ cursor: "pointer", transition: "opacity 320ms" }}>
+            <path
+              d={arcPath(0, innerR, a0, a1)}
+              fill={core.color}
+              opacity={dim ? 0.35 : 1}
+              stroke="var(--surface)"
+              strokeWidth={1.5}
+              style={{ transition: "opacity 320ms" }}
+            />
+            <text
+              x={tx} y={ty}
+              fontSize="10"
+              fontWeight="600"
+              fill="#FBF5EC"
+              textAnchor="middle"
+              dominantBaseline="middle"
+              style={{ pointerEvents: "none", letterSpacing: 0.3 }}
+              opacity={dim ? 0.7 : 1}
+            >{core.label}</text>
+          </g>
+        );
+      })}
+
+      {/* Center hint */}
+      <circle cx="0" cy="0" r="8" fill="var(--surface)" stroke="var(--line)" strokeWidth="1"
+        onClick={() => onChange(null)} style={{ cursor: focused ? "pointer" : "default" }}/>
+    </svg>
+  );
+}
+
+Object.assign(window, { MoodWheel, MOOD_CORES });
+
+</script>
+<script type="text/babel">
+/* Daily v2 — shared UI primitives */
+const { useState, useEffect, useRef } = React;
+
+const Card = ({ children, accent, soft, style, className = "", ...rest }) => (
+  <div
+    className={`card ${accent ? "card-accent" : ""} ${soft ? "card-soft" : ""} ${className}`}
+    style={style}
+    {...rest}
+  >{children}</div>
+);
+
+const PageHeader = ({ title, onBack, action, subtitle }) => (
+  <header className="page-header">
+    {onBack ? (
+      <button className="icon-btn" onClick={onBack} aria-label="Back"><IconBack size={18}/></button>
+    ) : <div style={{width:36}}/>}
+    <div className="page-titles">
+      <h2 className="page-title">{title}</h2>
+      {subtitle && <div className="muted xsmall">{subtitle}</div>}
+    </div>
+    <div className="ph-action">{action || <div style={{width:36}}/>}</div>
+  </header>
+);
+
+const SectionLabel = ({ children, right }) => (
+  <div className="section-label">
+    <span>{children}</span>
+    {right && <span className="section-right">{right}</span>}
+  </div>
+);
+
+const Sparkbars = ({ values, height = 44, accent = "var(--accent)", muted = "var(--accent-soft)", highlightLast = true }) => (
+  <div className="sparkbars" style={{ height }}>
+    {values.map((v, i) => (
+      <div key={i} className="spark-col">
+        <div className="spark-bar" style={{
+          height: `${Math.max(v * 100, 6)}%`,
+          background: highlightLast && i === values.length - 1 ? accent : muted,
+        }}/>
+      </div>
+    ))}
+  </div>
+);
+
+/* Mood swatch sized variants */
+const MoodSwatch = ({ color, size = 28, label, selected, onClick, ringless }) => (
+  <button
+    className={`mood-swatch-btn ${selected ? "selected" : ""} ${ringless ? "ringless" : ""}`}
+    onClick={onClick}
+    style={{ "--c": color, "--sz": size + "px" }}
+    aria-label={label}
+    title={label}
+  >
+    <span className="ms-dot"/>
+    {label && <span className="ms-label">{label}</span>}
+  </button>
+);
+
+/* Toast — undo on log */
+function useToast() {
+  const [toast, setToast] = useState(null);
+  const t = useRef();
+  useEffect(() => {
+    if (!toast) return;
+    clearTimeout(t.current);
+    t.current = setTimeout(() => setToast(null), 3500);
+    return () => clearTimeout(t.current);
+  }, [toast]);
+  return [toast, setToast];
+}
+const Toast = ({ toast, onClose, onUndo }) => {
+  if (!toast) return null;
+  return (
+    <div className="toast">
+      <div className="toast-msg">{toast.msg}</div>
+      {toast.undo && <button className="toast-undo" onClick={() => { onUndo && onUndo(toast); onClose(); }}>Undo</button>}
+      <button className="toast-close" onClick={onClose} aria-label="Dismiss"><IconClose size={14}/></button>
+    </div>
+  );
+};
+
+/* Bottom sheet primitive */
+function Sheet({ open, onClose, title, children }) {
+  return (
+    <>
+      <div className={`scrim ${open ? "in" : ""}`} onClick={onClose}/>
+      <div className={`sheet ${open ? "in" : ""}`}>
+        <div className="sheet-handle"/>
+        {title && (
+          <div className="sheet-head">
+            <h3 className="serif sheet-title">{title}</h3>
+            <button className="icon-btn" onClick={onClose} aria-label="Close"><IconClose size={16}/></button>
+          </div>
+        )}
+        <div className="sheet-body">{children}</div>
+      </div>
+    </>
+  );
+}
+
+/* FAB Log Sheet — quick-log picker */
+function LogSheet({ open, onClose, go, onQuickMood }) {
+  const items = [
+    { id: "mood",    Ic: IconHeart,    name: "Mood check-in", note: "Open the feelings wheel",            color: "#C97A7A" },
+    { id: "journal", Ic: IconJournal,  name: "Journal entry",  note: "Free-write what's on your mind",     color: "#7AA68B" },
+    { id: "med",     Ic: IconPill,     name: "Medication",     note: "Mark a dose taken",                  color: "#D7A65C" },
+    { id: "symptom", Ic: IconWave,     name: "Symptom",        note: "Anxiety, fog, panic, fatigue…",      color: "#9C7BA7" },
+    { id: "sleep",   Ic: IconMoon,     name: "Sleep",          note: "Last night's hours & quality",       color: "#7B8FA8" },
+    { id: "care",    Ic: IconShield,   name: "Self-care",      note: "A moment of grounding or movement",  color: "#7AA68B" },
+  ];
+
+  const handleQuick = (m) => { onQuickMood(m); onClose(); };
+
+  const handleGo = (id) => {
+    onClose();
+    setTimeout(() => {
+      if (id === "mood") go("mood");
+      else if (id === "journal") go("journal", { compose: true });
+      else if (id === "med") go("care", { tab: "Meds" });
+      else if (id === "symptom") go("care", { tab: "Symptoms" });
+      else if (id === "sleep") go("care", { tab: "Toolkit" });
+      else if (id === "care") go("care", { tab: "Toolkit" });
+    }, 180);
+  };
+
+  return (
+    <Sheet open={open} onClose={onClose} title="Take a moment">
+      <div className="quick-mood-row">
+        <div className="quick-mood-label">Quick mood</div>
+        <div className="quick-mood-dots">
+          {[
+            { id: "rough", c: "#9C7BA7", l: "Rough" },
+            { id: "low",   c: "#7B8FA8", l: "Low"   },
+            { id: "okay",  c: "#C9C2A0", l: "Okay"  },
+            { id: "good",  c: "#7AA68B", l: "Good"  },
+            { id: "great", c: "#D7A65C", l: "Great" },
+          ].map(m => (
+            <MoodSwatch key={m.id} color={m.c} label={m.l} size={36} onClick={() => handleQuick(m)}/>
+          ))}
+        </div>
+      </div>
+
+      <div className="sheet-divider"><span>or, log something specific</span></div>
+
+      <ul className="log-list">
+        {items.map(it => {
+          const Ic = it.Ic;
+          return (
+            <li key={it.id}>
+              <button className="log-row" onClick={() => handleGo(it.id)}>
+                <span className="log-ic" style={{ background: it.color + "22", color: it.color }}><Ic size={18}/></span>
+                <span className="log-meta">
+                  <span className="log-name">{it.name}</span>
+                  <span className="log-note muted xsmall">{it.note}</span>
+                </span>
+                <IconChevR size={14}/>
+              </button>
+            </li>
+          );
+        })}
+      </ul>
+    </Sheet>
+  );
+}
+
+Object.assign(window, {
+  Card, PageHeader, SectionLabel, Sparkbars, MoodSwatch, Sheet,
+  useToast, Toast, LogSheet,
+});
+
+</script>
+<script type="text/babel">
+/* Daily v2 — Today & Mood screens */
+const { useState: useState_TD } = React;
+
+function relTime(ms) {
+  const diff = Date.now() - ms;
+  const mins = Math.floor(diff / 60000);
+  if (mins < 1) return "just now";
+  if (mins < 60) return `${mins}m ago`;
+  const hrs = Math.floor(mins / 60);
+  if (hrs < 24) return `${hrs}h ago`;
+  return "yesterday";
+}
+
+function ScreenToday({ name, mood, setMood, meds, setMeds, journalCount, breathingMin, go, toast, openLog, openSettings }) {
+  const hour = new Date().getHours();
+  const greeting = hour < 12 ? "Good morning" : hour < 17 ? "Good afternoon" : "Good evening";
+  const takenCount = meds.filter(m => m.taken).length;
+
+  return (
+    <div className="scroll" data-screen-label="Today">
+      <div className="today-header">
+        <div>
+          <div className="muted xsmall caps">
+            {new Date().toLocaleDateString(undefined, { weekday: "long", month: "long", day: "numeric" })}
+          </div>
+          <h1 className="serif today-greeting">{greeting}, {name.split(" ")[0]}.</h1>
+        </div>
+        <button className="icon-btn" onClick={openSettings} aria-label="Settings">
+          <IconSettings size={18}/>
+        </button>
+      </div>
+
+      {mood ? (
+        <Card accent className="today-mood-card">
+          <div className="row between" style={{alignItems: "center"}}>
+            <div>
+              <div className="caps xsmall op85">How you're feeling</div>
+              <div className="serif xlarge" style={{marginTop: 2}}>{mood.label}</div>
+              <div className="op85 small" style={{marginTop: 2}}>{relTime(mood.t)}</div>
+            </div>
+            <span className="today-mood-dot" style={{background: mood.color}}/>
+          </div>
+          <button className="quiet-btn" style={{marginTop: 10, color: "var(--accent-ink)", opacity: 0.8}} onClick={() => go("mood")}>
+            Update check-in →
+          </button>
+        </Card>
+      ) : (
+        <Card className="today-mood-cta">
+          <div className="serif large">How are you feeling?</div>
+          <div className="muted small" style={{marginTop: 4}}>A quick check-in takes 30 seconds.</div>
+          <button className="btn primary" style={{marginTop: 12}} onClick={() => go("mood")}>
+            <IconHeart size={14}/> Log my mood
+          </button>
+        </Card>
+      )}
+
+      <SectionLabel right={
+        <button className="link xsmall" onClick={() => go("care", {tab: "Meds"})}>See all</button>
+      }>Medications</SectionLabel>
+
+      <Card className="today-meds-card" onClick={() => go("care", {tab: "Meds"})}>
+        <div className="row between" style={{alignItems: "center"}}>
+          <div>
+            <div className="serif large">{takenCount}/{meds.length}</div>
+            <div className="muted xsmall" style={{marginTop: 2}}>doses taken today</div>
+          </div>
+          <div className="today-meds-dots">
+            {meds.map(m => (
+              <span key={m.id} className={`today-med-dot ${m.taken ? "taken" : ""}`}/>
+            ))}
+          </div>
+        </div>
+        {takenCount < meds.length && (
+          <div className="muted small" style={{marginTop: 8}}>
+            {meds.filter(m => !m.taken).map(m => m.name).join(", ")} still due.
+          </div>
+        )}
+      </Card>
+
+      <div className="today-stats">
+        <Card className="stat-card" onClick={() => go("journal")}>
+          <div className="stat-num serif">{journalCount}</div>
+          <div className="muted xsmall">journal entries</div>
+        </Card>
+        <Card className="stat-card" onClick={() => go("care", {tab: "Toolkit", focus: "breath"})}>
+          <div className="stat-num serif">{breathingMin}</div>
+          <div className="muted xsmall">min breathing</div>
+        </Card>
+      </div>
+
+      <SectionLabel>Quick actions</SectionLabel>
+      <div className="today-actions padded-x">
+        <button className="action-chip" onClick={openLog}>
+          <IconPlus size={14}/> Log something
+        </button>
+        <button className="action-chip" onClick={() => go("care", {tab: "Toolkit"})}>
+          <IconBreath size={14}/> Breathe
+        </button>
+        <button className="action-chip" onClick={() => go("journal", {compose: true})}>
+          <IconJournal size={14}/> Write
+        </button>
+        <button className="action-chip" onClick={() => go("insights")}>
+          <IconInsight size={14}/> Insights
+        </button>
+      </div>
+
+      <SectionLabel>If you need support</SectionLabel>
+      <Card className="crisis" style={{marginBottom: 8}}>
+        <div className="crisis-row">
+          <span className="crisis-ic"><IconPhone size={16}/></span>
+          <div className="tool-meta">
+            <div className="med-name">988 Suicide &amp; Crisis Lifeline</div>
+            <div className="muted xsmall">Call or text · free, confidential, 24/7</div>
+          </div>
+        </div>
+      </Card>
+    </div>
+  );
+}
+
+/* ===== Mood check-in screen ===== */
+function ScreenMood({ go, mood, setMood, toast }) {
+  const [selection, setSelection] = useState_TD(null);
+  const [intensity, setIntensity] = useState_TD(5);
+  const [note, setNote] = useState_TD("");
+
+  const selectedCore = selection ? MOOD_CORES.find(c => c.id === selection.coreId) : null;
+  const selectedLabel = selection?.secondary || selectedCore?.label || null;
+  const selectedColor = selectedCore?.color || null;
+
+  const save = () => {
+    if (!selection) return;
+    const entry = {
+      id: Date.now(),
+      label: selectedLabel,
+      color: selectedColor,
+      coreId: selection.coreId,
+      intensity,
+      note: note.trim(),
+      tags: [],
+      t: Date.now(),
+    };
+    setMood(entry);
+    toast({ msg: `Logged "${selectedLabel}"`, undo: true, kind: "mood" });
+    go("today");
+  };
+
+  return (
+    <div className="scroll" data-screen-label="Mood">
+      <PageHeader title="Mood check-in" onBack={() => go("today")}/>
+
+      <div className="muted small padded-x mood-prompt">
+        Tap a feeling — expand to see more words, then pick what fits.
+      </div>
+
+      <div className="wheel-wrap padded-x">
+        <MoodWheel value={selection} onChange={setSelection}/>
+      </div>
+
+      {selection && (
+        <>
+          <div className="mood-selected padded-x">
+            <span className="mood-sel-dot" style={{background: selectedColor}}/>
+            <span className="serif large">{selectedLabel}</span>
+          </div>
+
+          <div className="form padded-x" style={{gap: 10, paddingTop: 8}}>
+            <label className="form-l caps xsmall muted">Intensity · {intensity}/10</label>
+            <input
+              type="range" min={1} max={10} value={intensity}
+              onChange={e => setIntensity(+e.target.value)}
+              className="slider"
+              style={{"--p": `${(intensity - 1) / 9 * 100}%`, "--c": selectedColor || "var(--accent)"}}
+            />
+
+            <label className="form-l caps xsmall muted" style={{marginTop: 4}}>What's going on? (optional)</label>
+            <textarea
+              value={note}
+              onChange={e => setNote(e.target.value)}
+              placeholder="Context, triggers, anything on your mind…"
+              rows={3}
+              className="text-area"
+            />
+
+            <button className="btn primary" style={{marginTop: 4}} onClick={save}>
+              <IconCheck size={14}/> Log this feeling
+            </button>
+          </div>
+        </>
+      )}
+    </div>
+  );
+}
+
+Object.assign(window, { ScreenToday, ScreenMood });
+
+</script>
+<script type="text/babel">
+/* Daily v2 — Care screen (Meds, Symptoms, Toolkit) */
+const { useState: useState_C, useEffect: useEffect_C } = React;
+
+function ScreenCare({ go, meds, setMeds, symptoms, setSymptoms, toast, initialTab = "Meds", initialFocus = null }) {
+  const [tab, setTab] = useState_C(initialTab);
+  useEffect_C(() => { setTab(initialTab); }, [initialTab]);
+  return (
+    <div className="scroll" data-screen-label="Care">
+      <PageHeader title="Care" onBack={() => go("today")}/>
+      <div className="seg">
+        {["Meds","Symptoms","Toolkit"].map(t => (
+          <button key={t} className={`seg-btn ${tab===t?"active":""}`} onClick={() => setTab(t)}>{t}</button>
+        ))}
+      </div>
+      {tab === "Meds"     && <PaneMeds meds={meds} setMeds={setMeds} toast={toast}/>}
+      {tab === "Symptoms" && <PaneSymptoms items={symptoms} setItems={setSymptoms} toast={toast}/>}
+      {tab === "Toolkit"  && <PaneToolkit focus={initialFocus}/>}
+    </div>
+  );
+}
+
+/* ===== Meds ===== */
+const BLANK_MED = { name: "", dose: "", time: "8:00 AM", note: "", purpose: "", warn: "" };
+
+function PaneMeds({ meds, setMeds, toast }) {
+  const [editing, setEditing]       = useState_C(null);
+  const [adding, setAdding]         = useState_C(false);
+  const [newMed, setNewMed]         = useState_C(BLANK_MED);
+  const [confirmDel, setConfirmDel] = useState_C(null);
+
+  const taken  = meds.filter(m => m.taken).length;
+  const adh14  = 92;
+
+  /* ── mark taken / untaken ── */
+  const onCheck = (id) => {
+    const m = meds.find(x => x.id === id);
+    setMeds(meds.map(x => x.id === id ? { ...x, taken: !x.taken, takenAt: !x.taken ? new Date().toLocaleTimeString([], {hour:"numeric",minute:"2-digit"}) : undefined } : x));
+    if (m && !m.taken) toast({ msg: `${m.name} marked taken`, undo: true, kind: "med", id });
+  };
+
+  /* ── add new medication ── */
+  const saveMed = () => {
+    if (!newMed.name.trim() || !newMed.dose.trim() || !newMed.time.trim()) return;
+    const id = Date.now();
+    setMeds([...meds, { id, ...newMed, taken: false }]);
+    toast({ msg: `${newMed.name} added` });
+    setAdding(false);
+    setNewMed(BLANK_MED);
+  };
+
+  /* ── remove medication ── */
+  const removeMed = (id) => {
+    const m = meds.find(x => x.id === id);
+    setMeds(meds.filter(x => x.id !== id));
+    setConfirmDel(null);
+    setEditing(null);
+    toast({ msg: `${m?.name || "Medication"} removed` });
+  };
+
+  /* ── unique profiles for "Your medications" section ── */
+  const profiles = [...new Map(meds.map(m => [`${m.name}|${m.dose}`, m])).values()];
+
+  return (
+    <>
+      {/* ── Adherence card ── */}
+      <Card accent className="adherence">
+        <div className="row between" style={{alignItems:"center"}}>
+          <div>
+            <div className="muted xsmall caps op85">14-day adherence</div>
+            <div className="row baseline" style={{gap:6, marginTop:4}}>
+              <div className="serif xxlarge">{adh14}</div>
+              <div className="ad-pct-sym">%</div>
+            </div>
+            <div className="muted small op85">{taken}/{meds.length} due today</div>
+          </div>
+          <div className="ad-ring">
+            <svg viewBox="0 0 36 36" width="78" height="78">
+              <circle cx="18" cy="18" r="15" fill="none" stroke="rgba(255,255,255,.25)" strokeWidth="2.5"/>
+              <circle cx="18" cy="18" r="15" fill="none" stroke="#FBF5EC" strokeWidth="2.5"
+                strokeDasharray={`${(adh14/100)*94.2} 94.2`} strokeLinecap="round" transform="rotate(-90 18 18)"/>
+            </svg>
+          </div>
+        </div>
+        <Sparkbars values={[1,1,.7,1,1,1,1,1,.45,1,1,1,1,.9]} accent="#FBF5EC" muted="#FBF5EC55" height={32}/>
+      </Card>
+
+      {/* ── Today's doses ── */}
+      <SectionLabel right={<span className="muted xsmall">{taken}/{meds.length} taken</span>}>Today</SectionLabel>
+
+      {meds.length === 0 && (
+        <div className="empty">No medications scheduled. Tap "Add medication" below to get started.</div>
+      )}
+
+      {meds.map(m => (
+        <Card key={m.id} className="med-row-card">
+          <div className="med-row-inner">
+            <button className={`check ${m.taken?"on":""}`} onClick={() => onCheck(m.id)} aria-label={m.taken?"Mark untaken":"Mark taken"}>
+              {m.taken && <IconCheck size={14}/>}
+            </button>
+            <div className="med-meta">
+              <div className="med-name">{m.name} <span className="muted regular">{m.dose}</span></div>
+              <div className="muted xsmall">{m.time}{m.note ? ` · ${m.note}` : ""}</div>
+              {m.taken && <div className="taken-stamp xsmall">✓ Taken at {m.takenAt || m.time}</div>}
+            </div>
+            <button className="more" onClick={() => setEditing(editing === m.id ? null : m.id)} aria-label="Options">
+              <IconMore size={16}/>
+            </button>
+          </div>
+
+          {editing === m.id && (
+            <div className="med-actions">
+              <button className="quiet-btn" onClick={() => { onCheck(m.id); setEditing(null); }}>
+                <IconClock size={13}/> Took at a different time
+              </button>
+              <button className="quiet-btn" onClick={() => { toast({ msg: "Snoozed 15 min" }); setEditing(null); }}>
+                <IconBell size={13}/> Snooze 15 min
+              </button>
+              <button className="quiet-btn danger" onClick={() => { setConfirmDel(m.id); setEditing(null); }}>
+                <IconClose size={13}/> Remove this medication
+              </button>
+              <button className="quiet-btn" onClick={() => setEditing(null)}>
+                Cancel
+              </button>
+            </div>
+          )}
+        </Card>
+      ))}
+
+      {/* ── Medication profiles ── */}
+      <SectionLabel right={
+        <button className="link xsmall" onClick={() => setAdding(true)}>+ Add</button>
+      }>Your medications</SectionLabel>
+
+      {profiles.length === 0 && (
+        <div className="empty">No medications added yet.</div>
+      )}
+
+      {profiles.map((m) => (
+        <Card key={`${m.name}|${m.dose}`} className="med-card">
+          <div className="row between" style={{alignItems:"flex-start"}}>
+            <div style={{flex:1, minWidth:0}}>
+              <div className="med-card-name">{m.name} <span className="muted regular">{m.dose}</span></div>
+              <div className="muted xsmall">{m.purpose || "No purpose noted"} · {m.time}</div>
+            </div>
+            <button className="more" onClick={() => setConfirmDel(m.id)} aria-label="Remove">
+              <IconClose size={15}/>
+            </button>
+          </div>
+          <div className="med-card-chips" style={{marginTop:8}}>
+            <span className="chip"><span className="chip-dot dot-good"/>{adh14}% adherence</span>
+            <span className="chip"><IconClock size={11}/> {m.supply || "—"} days left</span>
+          </div>
+          {m.warn && (
+            <div className="warn-row"><IconAlert size={13}/> <span>{m.warn}</span></div>
+          )}
+        </Card>
+      ))}
+
+      <div className="block padded">
+        <button className="btn primary" onClick={() => setAdding(true)}>
+          <IconPlus size={14}/> Add medication
+        </button>
+      </div>
+
+      {/* ── Add medication sheet ── */}
+      <Sheet open={adding} onClose={() => { setAdding(false); setNewMed(BLANK_MED); }} title="Add medication">
+        <div className="form" style={{paddingBottom: 8}}>
+          <label className="form-l caps xsmall muted">Medication name *</label>
+          <input className="text-input" placeholder="e.g. Sertraline" value={newMed.name}
+            onChange={e => setNewMed({...newMed, name: e.target.value})} autoFocus/>
+
+          <label className="form-l caps xsmall muted">Dose *</label>
+          <input className="text-input" placeholder="e.g. 50mg" value={newMed.dose}
+            onChange={e => setNewMed({...newMed, dose: e.target.value})}/>
+
+          <label className="form-l caps xsmall muted">Time / schedule *</label>
+          <input className="text-input" placeholder="e.g. 8:00 AM" value={newMed.time}
+            onChange={e => setNewMed({...newMed, time: e.target.value})}/>
+
+          <label className="form-l caps xsmall muted">Notes</label>
+          <input className="text-input" placeholder="e.g. with breakfast, as needed"
+            value={newMed.note} onChange={e => setNewMed({...newMed, note: e.target.value})}/>
+
+          <label className="form-l caps xsmall muted">Purpose (optional)</label>
+          <input className="text-input" placeholder="e.g. For anxiety & depression"
+            value={newMed.purpose} onChange={e => setNewMed({...newMed, purpose: e.target.value})}/>
+
+          <label className="form-l caps xsmall muted">Warnings / side effects (optional)</label>
+          <input className="text-input" placeholder="e.g. Take with food"
+            value={newMed.warn} onChange={e => setNewMed({...newMed, warn: e.target.value})}/>
+
+          <button className="btn primary" style={{marginTop: 8}}
+            disabled={!newMed.name.trim() || !newMed.dose.trim() || !newMed.time.trim()}
+            onClick={saveMed}>
+            <IconCheck size={14}/> Save medication
+          </button>
+        </div>
+      </Sheet>
+
+      {/* ── Confirm remove sheet ── */}
+      <Sheet open={!!confirmDel} onClose={() => setConfirmDel(null)} title="Remove medication?">
+        <div style={{paddingBottom: 8}}>
+          <p className="muted small" style={{marginBottom: 16, lineHeight: 1.6}}>
+            <strong>{meds.find(m => m.id === confirmDel)?.name}</strong> will be removed from your list and today's schedule. This can't be undone.
+          </p>
+          <button className="btn primary" style={{background:"#C97A7A", marginBottom: 8}}
+            onClick={() => removeMed(confirmDel)}>
+            <IconClose size={14}/> Remove
+          </button>
+          <button className="btn ghost" onClick={() => setConfirmDel(null)}>Cancel</button>
+        </div>
+      </Sheet>
+    </>
+  );
+}
+
+/* ===== Symptoms ===== */
+function PaneSymptoms({ items, setItems, toast }) {
+  const [adding, setAdding] = useState_C(false);
+  const [newSym, setNewSym] = useState_C({ name: "", sev: 5, note: "" });
+
+  const QUICK = ["Anxiety","Panic","Brain fog","Intrusive thoughts","Low motivation","Restless","Irritable","Couldn't sleep"];
+
+  const adjust = (id, delta) => {
+    setItems(items.map(s => s.id === id ? {...s, sev: Math.max(1, Math.min(10, s.sev + delta))} : s));
+  };
+
+  const addQuick = (name) => {
+    setItems([{ id: Date.now(), name, sev: 5, note: "", time: new Date().toLocaleTimeString([], {hour:"numeric",minute:"2-digit"}) }, ...items]);
+    toast({ msg: `Logged: ${name}`, undo: true });
+  };
+
+  return (
+    <>
+      <div className="padded-x muted small mood-prompt">
+        How is your body and mind today? Drag the bar to adjust intensity.
+      </div>
+
+      <SectionLabel>Quick log</SectionLabel>
+      <div className="quick-tags padded-x">
+        {QUICK.map(q => (
+          <button key={q} className="qtag" onClick={() => addQuick(q)}>+ {q}</button>
+        ))}
+      </div>
+
+      <SectionLabel>Today</SectionLabel>
+      {items.length === 0 && (
+        <div className="empty">Nothing logged yet today. Use the quick chips above, or tap + for detail.</div>
+      )}
+      {items.map(it => (
+        <Card key={it.id} className="symp">
+          <div className="row between">
+            <div className="symp-meta">
+              <div className="med-name">{it.name}</div>
+              <div className="muted xsmall">{it.time}{it.note ? ` · "${it.note}"` : ""}</div>
+            </div>
+            <div className="sev-controls">
+              <button className="sev-btn" onClick={() => adjust(it.id, -1)} aria-label="Less">−</button>
+              <div className="sev-val">{it.sev}<span className="muted xsmall">/10</span></div>
+              <button className="sev-btn" onClick={() => adjust(it.id, +1)} aria-label="More">+</button>
+            </div>
+          </div>
+          <div className="sev-bar" onClick={(e) => {
+            const r = e.currentTarget.getBoundingClientRect();
+            const p = Math.max(1, Math.min(10, Math.round(((e.clientX - r.left) / r.width) * 10)));
+            setItems(items.map(s => s.id === it.id ? {...s, sev: p} : s));
+          }}>
+            <div className="sev-fill" style={{width:`${it.sev*10}%`}}/>
+          </div>
+        </Card>
+      ))}
+
+      <div className="block padded">
+        <button className="btn primary" onClick={() => setAdding(true)}>
+          <IconPlus size={14}/> Detailed log
+        </button>
+      </div>
+
+      <Sheet open={adding} onClose={() => setAdding(false)} title="Log a symptom">
+        <div className="form">
+          <label className="form-l caps xsmall muted">Name</label>
+          <input value={newSym.name} onChange={e => setNewSym({...newSym, name: e.target.value})} placeholder="e.g. Tight chest" className="text-input"/>
+          <label className="form-l caps xsmall muted">Severity · {newSym.sev}/10</label>
+          <input type="range" min={1} max={10} value={newSym.sev} onChange={e => setNewSym({...newSym, sev:+e.target.value})} className="slider"
+            style={{"--p":`${(newSym.sev-1)/9*100}%`,"--c":"var(--accent)"}}/>
+          <label className="form-l caps xsmall muted">Notes</label>
+          <textarea value={newSym.note} onChange={e => setNewSym({...newSym, note: e.target.value})} placeholder="What does it feel like?" rows={3} className="text-area"/>
+          <button className="btn primary" disabled={!newSym.name} onClick={() => {
+            setItems([{ id: Date.now(), ...newSym, time: new Date().toLocaleTimeString([], {hour:"numeric",minute:"2-digit"}) }, ...items]);
+            setAdding(false); setNewSym({ name:"", sev:5, note:"" });
+            toast({ msg: `Logged: ${newSym.name}`, undo: true });
+          }}><IconCheck size={14}/> Save</button>
+        </div>
+      </Sheet>
+    </>
+  );
+}
+
+/* ===== Toolkit ===== */
+function PaneToolkit({ focus }) {
+  const [playing, setPlaying] = useState_C(null);
+  useEffect_C(() => {
+    if (focus === "breath") setPlaying("breath");
+    else if (focus === "ground") setPlaying("ground");
+  }, [focus]);
+
+  const tools = [
+    { id:"breath",  name:"Box breathing",          note:"4 in · 4 hold · 4 out · 4 hold", time:"4 min", color:"#7AA68B", Ic:IconBreath },
+    { id:"ground",  name:"5-4-3-2-1 grounding",   note:"Anchor your senses",              time:"3 min", color:"#9C7BA7", Ic:IconGround },
+    { id:"body",    name:"Body scan",              note:"Soften from head to feet",         time:"8 min", color:"#7B8FA8", Ic:IconWave  },
+    { id:"urge",    name:"Urge surfing",           note:"Ride the wave without acting",     time:"5 min", color:"#D7A65C", Ic:IconWave  },
+    { id:"thought", name:"Thought defusion",       note:"Hold thoughts at a distance",      time:"6 min", color:"#C97A7A", Ic:IconEye   },
+  ];
+
+  return (
+    <>
+      <div className="padded-x muted small mood-prompt">
+        Small tools for hard moments. Use what helps; leave what doesn't.
+      </div>
+
+      {tools.map(t => {
+        const Ic = t.Ic;
+        return (
+          <Card key={t.id} className="tool-card">
+            <button className="tool-row" onClick={() => setPlaying(t.id)}>
+              <span className="tk-ic" style={{ background: t.color+"22", color: t.color }}><Ic size={20}/></span>
+              <span className="tool-meta">
+                <span className="tool-name">{t.name}</span>
+                <span className="muted xsmall">{t.note}</span>
+              </span>
+              <span className="tool-time">{t.time}</span>
+            </button>
+          </Card>
+        );
+      })}
+
+      <SectionLabel>If you're in crisis</SectionLabel>
+      <Card className="crisis">
+        <div className="crisis-row">
+          <span className="crisis-ic"><IconPhone size={16}/></span>
+          <div className="tool-meta">
+            <div className="med-name">988 — Suicide &amp; Crisis Lifeline</div>
+            <div className="muted xsmall">Call or text · 24/7 · free, confidential</div>
+          </div>
+        </div>
+        <div className="crisis-row">
+          <span className="crisis-ic"><IconShield size={16}/></span>
+          <div className="tool-meta">
+            <div className="med-name">Your safety plan</div>
+            <div className="muted xsmall">Coping steps · supports · reasons to stay</div>
+          </div>
+          <IconChevR size={14} className="op6"/>
+        </div>
+      </Card>
+
+      <Sheet open={!!playing} onClose={() => setPlaying(null)}
+        title={playing === "breath" ? "Box breathing" : playing === "ground" ? "5-4-3-2-1 grounding" : tools.find(t=>t.id===playing)?.name}>
+        {playing === "breath" && <BreathPlayer/>}
+        {playing === "ground" && <GroundPlayer/>}
+        {playing && !["breath","ground"].includes(playing) && (
+          <div className="player-placeholder">
+            <div className="serif xlarge">Coming soon</div>
+            <div className="muted small" style={{marginTop:6}}>This exercise will guide you through {tools.find(t=>t.id===playing)?.name?.toLowerCase()}.</div>
+          </div>
+        )}
+      </Sheet>
+    </>
+  );
+}
+
+/* Box breathing */
+function BreathPlayer() {
+  const [tick, setTick]       = useState_C(0);
+  const [running, setRunning] = useState_C(true);
+  useEffect_C(() => {
+    if (!running) return;
+    const id = setInterval(() => setTick(t => t+1), 1000);
+    return () => clearInterval(id);
+  }, [running]);
+  const phase  = tick % 16;
+  const labels = ["Breathe in","Hold","Breathe out","Hold"];
+  const idx    = Math.floor(phase / 4);
+  const sec    = 4 - (phase % 4);
+  const scale  = idx === 0 ? 1 + (phase%4)/4*.5 : idx === 2 ? 1.5 - (phase%4)/4*.5 : idx === 1 ? 1.5 : 1;
+  return (
+    <div className="breath-stage">
+      <div className="breath-orb" style={{ transform:`scale(${scale})` }}/>
+      <div className="breath-text">
+        <div className="serif xxlarge">{labels[idx]}</div>
+        <div className="muted small">{sec}</div>
+      </div>
+      <button className="btn ghost" onClick={() => setRunning(!running)} style={{maxWidth:200, margin:"20px auto 0"}}>
+        {running ? "Pause" : "Resume"}
+      </button>
+    </div>
+  );
+}
+
+function GroundPlayer() {
+  const steps = [
+    { n:5, what:"things you can see"  },
+    { n:4, what:"things you can touch"},
+    { n:3, what:"things you can hear" },
+    { n:2, what:"things you can smell"},
+    { n:1, what:"thing you can taste" },
+  ];
+  const [i, setI] = useState_C(0);
+  return (
+    <div className="ground-stage">
+      <div className="ground-num serif">{steps[i].n}</div>
+      <div className="ground-what serif xlarge">{steps[i].what}</div>
+      <div className="muted small" style={{marginTop:8}}>Take a breath. Notice. No rush.</div>
+      <div className="ground-nav">
+        <button className="btn ghost"   onClick={() => setI(Math.max(0, i-1))}             disabled={i===0}>Back</button>
+        <button className="btn primary" onClick={() => setI(Math.min(steps.length-1, i+1))} disabled={i===steps.length-1}>Next</button>
+      </div>
+      <div className="ground-dots">
+        {steps.map((_,j) => <span key={j} className={`gd ${j===i?"on":""}`}/>)}
+      </div>
+    </div>
+  );
+}
+
+Object.assign(window, { ScreenCare });
+
+</script>
+<script type="text/babel">
+/* Daily v2 — Journal + Insights */
+const { useState: useState_J } = React;
+
+function ScreenJournal({ go, entries, setEntries, mood, openCompose }) {
+  const [composing, setComposing] = useState_J(openCompose || false);
+  const [draft, setDraft] = useState_J("");
+  const [filter, setFilter] = useState_J("All");
+
+  const filtered = entries.filter(e =>
+    filter === "All" ? true :
+    filter === "Mood" ? e.kind === "mood" :
+    filter === "Notes" ? e.kind === "note" :
+    true
+  );
+
+  const save = () => {
+    if (!draft.trim()) return;
+    const e = { id: Date.now(), kind: "note", text: draft.trim(), t: Date.now() };
+    setEntries([e, ...entries]);
+    setDraft("");
+    setComposing(false);
+  };
+
+  return (
+    <div className="scroll" data-screen-label="Journal">
+      <PageHeader title="Journal" onBack={() => go("today")} action={
+        <div className="row" style={{gap:6}}>
+          <button className="icon-btn" onClick={() => go("history")} aria-label="History"><IconCalendar size={18}/></button>
+          <button className="icon-btn" onClick={() => setComposing(true)} aria-label="New entry"><IconPlus size={18}/></button>
+        </div>
+      }/>
+
+      <div className="seg">
+        {["All","Mood","Notes"].map(t => (
+          <button key={t} className={`seg-btn ${filter===t?"active":""}`} onClick={() => setFilter(t)}>{t}</button>
+        ))}
+      </div>
+
+      {composing && (
+        <Card className="compose">
+          <div className="muted xsmall caps">New entry · {new Date().toLocaleString([], { weekday:"short", hour:"numeric", minute:"2-digit" })}</div>
+          <textarea
+            value={draft} onChange={e => setDraft(e.target.value)}
+            placeholder="What's here for you right now? No rules."
+            rows={5}
+            autoFocus
+            className="text-area big"
+          />
+          <div className="row" style={{gap:8, justifyContent:"flex-end", marginTop:10}}>
+            <button className="btn ghost" style={{maxWidth: 120}} onClick={() => { setDraft(""); setComposing(false); }}>Cancel</button>
+            <button className="btn primary" style={{maxWidth: 120}} disabled={!draft.trim()} onClick={save}>Save</button>
+          </div>
+        </Card>
+      )}
+
+      <SectionLabel right={<span className="muted xsmall">{filtered.length} entries</span>}>This week</SectionLabel>
+
+      {filtered.length === 0 && (
+        <div className="empty">No entries yet. Tap + to write something.</div>
+      )}
+
+      <div className="timeline padded-x">
+        {filtered.map((e, idx) => (
+          <div key={e.id} className="t-row">
+            <div className="t-rail">
+              <span className="t-dot" style={{ background: e.color || (e.kind === "mood" ? "var(--accent)" : "var(--muted)") }}/>
+              {idx < filtered.length - 1 && <span className="t-line"/>}
+            </div>
+            <div className="t-card">
+              <div className="row between" style={{alignItems:"flex-start"}}>
+                <div>
+                  {e.kind === "mood" ? (
+                    <>
+                      <div className="muted xsmall caps">{new Date(e.t).toLocaleString([], { weekday:"short", hour:"numeric", minute:"2-digit" })}</div>
+                      <div className="serif large">{e.label} <span className="muted xsmall">· {e.intensity ? `${e.intensity}/10` : "quick"}</span></div>
+                      {e.note && <div className="entry-body">"{e.note}"</div>}
+                      {e.tags && e.tags.length > 0 && (
+                        <div className="entry-tags">
+                          {e.tags.map(t => <span key={t} className="tag-readonly">{t}</span>)}
+                        </div>
+                      )}
+                    </>
+                  ) : (
+                    <>
+                      <div className="muted xsmall caps">{new Date(e.t).toLocaleString([], { weekday:"short", hour:"numeric", minute:"2-digit" })}</div>
+                      <div className="entry-body serif large-text">{e.text}</div>
+                    </>
+                  )}
+                </div>
+                {e.kind === "mood" && e.color && (
+                  <span className="entry-swatch" style={{ background: e.color }}/>
+                )}
+              </div>
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+/* ===== Insights ===== */
+function ScreenInsights({ go }) {
+  const [sharing, setSharing] = useState_J(false);
+
+  const insights = [
+    {
+      headline: "You feel lighter on days you slept >7 hours.",
+      detail: "Mood averaged 6.8/10 on well-rested days vs 4.2/10 otherwise.",
+      tone: "good",
+      tag: "Sleep · Mood",
+    },
+    {
+      headline: "Anxiety spiked 2× more on social work days.",
+      detail: "Logged 8 of 12 anxiety entries on Tue/Thu.",
+      tone: "watch",
+      tag: "Pattern",
+    },
+    {
+      headline: "Sertraline adherence is steady at 98%.",
+      detail: "Two missed evening doses this fortnight.",
+      tone: "good",
+      tag: "Meds",
+    },
+    {
+      headline: "Box breathing helped 4 of 5 times.",
+      detail: "Anxiety dropped from 7.2 → 4.4 on average after a session.",
+      tone: "good",
+      tag: "Toolkit",
+    },
+  ];
+
+  return (
+    <div className="scroll" data-screen-label="Insights">
+      <PageHeader title="Insights" onBack={() => go("today")} subtitle="Patterns from your last 14 days"/>
+
+      <Card accent className="insight-hero">
+        <div className="caps xsmall op85">Trend</div>
+        <div className="serif xxlarge">Lighter</div>
+        <div className="op85 small" style={{marginTop:4}}>Your average mood is up 0.6 vs last fortnight.</div>
+        <div className="mood-bands">
+          {[
+            { c: "#9C7BA7", w: 8 },
+            { c: "#7B8FA8", w: 14 },
+            { c: "#C9C2A0", w: 22 },
+            { c: "#7AA68B", w: 34 },
+            { c: "#D7A65C", w: 22 },
+          ].map((b, i) => <span key={i} style={{ background: b.c, flex: b.w }}/>)}
+        </div>
+        <div className="row between op85 xsmall">
+          <span>Rough</span><span>Low</span><span>Okay</span><span>Good</span><span>Great</span>
+        </div>
+      </Card>
+
+      <SectionLabel>By day of week</SectionLabel>
+      <Card>
+        <div className="dow-row">
+          {[
+            { d: "Mon", v: 0.55, c: "#7B8FA8" },
+            { d: "Tue", v: 0.35, c: "#9C7BA7" },
+            { d: "Wed", v: 0.70, c: "#7AA68B" },
+            { d: "Thu", v: 0.40, c: "#9C7BA7" },
+            { d: "Fri", v: 0.78, c: "#7AA68B" },
+            { d: "Sat", v: 0.85, c: "#D7A65C" },
+            { d: "Sun", v: 0.65, c: "#7AA68B" },
+          ].map(p => (
+            <div key={p.d} className="dow">
+              <div className="dow-bar"><span style={{ height: `${p.v*100}%`, background: p.c }}/></div>
+              <div className="dow-l">{p.d}</div>
+            </div>
+          ))}
+        </div>
+      </Card>
+
+      <SectionLabel>What we noticed</SectionLabel>
+      {insights.map((i, idx) => (
+        <Card key={idx} className={`insight ${i.tone}`}>
+          <div className="row between" style={{alignItems:"flex-start"}}>
+            <div style={{flex:1}}>
+              <div className="caps xsmall" style={{color: i.tone === "good" ? "var(--positive)" : "var(--accent)"}}>{i.tag}</div>
+              <div className="serif large">{i.headline}</div>
+              <div className="muted small" style={{marginTop:4}}>{i.detail}</div>
+            </div>
+            <span className={`ins-pill ${i.tone}`}>
+              {i.tone === "good" ? <IconSparkle size={14}/> : <IconEye size={14}/>}
+            </span>
+          </div>
+        </Card>
+      ))}
+
+      <div className="block padded">
+        <button className="btn primary" onClick={() => setSharing(true)}>
+          <IconShareTherapist size={16}/> Share with my therapist
+        </button>
+      </div>
+
+      <Sheet open={sharing} onClose={() => setSharing(false)} title="Share a summary">
+        <TherapistShare onClose={() => setSharing(false)}/>
+      </Sheet>
+    </div>
+  );
+}
+
+function TherapistShare({ onClose }) {
+  const [range, setRange] = useState_J("Last 14 days");
+  const [include, setInclude] = useState_J({
+    mood: true, meds: true, symptoms: true, journal: false, toolkit: true,
+  });
+  const [recipient, setRecipient] = useState_J("Dr. Mira Patel");
+  const [sent, setSent] = useState_J(false);
+
+  if (sent) {
+    return (
+      <div className="share-sent">
+        <div className="share-check"><IconCheck size={28}/></div>
+        <div className="serif xlarge">Summary sent</div>
+        <div className="muted small" style={{marginTop:6, textAlign:"center"}}>A secure link is now in {recipient}'s portal. You can revoke access anytime in settings.</div>
+        <button className="btn primary" style={{marginTop:24}} onClick={onClose}>Done</button>
+      </div>
+    );
+  }
+
+  return (
+    <div className="form">
+      <label className="form-l caps xsmall muted">Recipient</label>
+      <input className="text-input" value={recipient} onChange={e => setRecipient(e.target.value)}/>
+
+      <label className="form-l caps xsmall muted">Range</label>
+      <div className="seg inline">
+        {["Last 7 days","Last 14 days","Last 30 days"].map(r => (
+          <button key={r} className={`seg-btn ${range===r?"active":""}`} onClick={() => setRange(r)}>{r}</button>
+        ))}
+      </div>
+
+      <label className="form-l caps xsmall muted">Include</label>
+      <div className="include-list">
+        {[
+          { k: "mood", l: "Mood entries", sub: "Quick check-ins + detailed" },
+          { k: "meds", l: "Medication adherence", sub: "Doses on/off schedule" },
+          { k: "symptoms", l: "Symptoms", sub: "Frequency + severity" },
+          { k: "journal", l: "Journal entries", sub: "Free-form writing (private by default)" },
+          { k: "toolkit", l: "Toolkit use", sub: "What's helping" },
+        ].map(o => (
+          <button key={o.k} className={`include-row ${include[o.k] ? "on" : ""}`} onClick={() => setInclude({...include, [o.k]: !include[o.k]})}>
+            <span className="incl-meta">
+              <span className="med-name">{o.l}</span>
+              <span className="muted xsmall">{o.sub}</span>
+            </span>
+            <span className={`incl-check ${include[o.k] ? "on" : ""}`}>
+              {include[o.k] && <IconCheck size={12}/>}
+            </span>
+          </button>
+        ))}
+      </div>
+
+      <div className="share-foot muted xsmall">
+        <IconLock size={11}/> Shared as a read-only encrypted summary. They cannot see future entries unless you re-share.
+      </div>
+
+      <button className="btn primary" onClick={() => setSent(true)}><IconSendUp size={14}/> Send to {recipient.split(" ")[0]}</button>
+    </div>
+  );
+}
+
+Object.assign(window, { ScreenJournal, ScreenInsights });
+
+</script>
+<script type="text/babel">
+/* Daily v2 — Onboarding flow */
+const { useState: useState_O } = React;
+
+function Onboarding({ onComplete, defaultName }) {
+  const [step, setStep] = useState_O(0);
+  const [data, setData] = useState_O({
+    name: defaultName || "",
+    pronouns: "",
+    ageRange: "",
+    reasons: [],
+    therapist: "",
+    therapistEmail: "",
+    checkinTime: "09:00",
+    enableMedReminders: true,
+    enableCheckinReminder: true,
+    biometricLock: false,
+    consent: false,
+  });
+
+  const set = (k, v) => setData(d => ({ ...d, [k]: v }));
+  const toggleReason = (r) => set("reasons", data.reasons.includes(r) ? data.reasons.filter(x => x !== r) : [...data.reasons, r]);
+
+  const STEPS = [
+    { id: "welcome",  next: "Begin" },
+    { id: "name",     next: "Continue", canNext: () => !!data.name.trim() },
+    { id: "reasons",  next: "Continue", canNext: () => data.reasons.length > 0 },
+    { id: "care",     next: "Continue" },
+    { id: "reminders",next: "Continue" },
+    { id: "privacy",  next: "I'm in",   canNext: () => data.consent },
+    { id: "ready",    next: "Open Daily" },
+  ];
+
+  const current = STEPS[step];
+  const canAdvance = current.canNext ? current.canNext() : true;
+  const advance = () => {
+    if (step < STEPS.length - 1) setStep(step + 1);
+    else onComplete(data);
+  };
+  const back = () => step > 0 && setStep(step - 1);
+
+  return (
+    <div className="onboard-stage" data-screen-label={`Onboard / ${current.id}`}>
+      <div className="onboard-top">
+        {step > 0 && step < STEPS.length - 1 && (
+          <button className="icon-btn" onClick={back}><IconBack size={18}/></button>
+        )}
+        <div className="onboard-dots">
+          {STEPS.map((_, i) => (
+            <span key={i} className={`od ${i === step ? "on" : ""} ${i < step ? "done" : ""}`}/>
+          ))}
+        </div>
+        {step > 0 && step < STEPS.length - 1 ? (
+          <button className="skip-link" onClick={() => onComplete(data)}>Skip</button>
+        ) : <div style={{width:36}}/>}
+      </div>
+
+      <div className="onboard-body">
+        {current.id === "welcome" && <StepWelcome/>}
+        {current.id === "name" && <StepName data={data} set={set}/>}
+        {current.id === "reasons" && <StepReasons data={data} toggleReason={toggleReason}/>}
+        {current.id === "care" && <StepCare data={data} set={set}/>}
+        {current.id === "reminders" && <StepReminders data={data} set={set}/>}
+        {current.id === "privacy" && <StepPrivacy data={data} set={set}/>}
+        {current.id === "ready" && <StepReady data={data}/>}
+      </div>
+
+      <div className="onboard-foot">
+        <button className="btn primary" disabled={!canAdvance} onClick={advance}>{current.next}</button>
+        {current.id === "welcome" && (
+          <button className="link" style={{marginTop: 12}}>I already have an account</button>
+        )}
+      </div>
+    </div>
+  );
+}
+
+function StepWelcome() {
+  return (
+    <div className="welcome">
+      <div className="welcome-mark">
+        <svg viewBox="0 0 120 120" width="80" height="80">
+          <defs>
+            <radialGradient id="welcomeG" cx="50%" cy="40%">
+              <stop offset="0%" stopColor="white" stopOpacity="0.8"/>
+              <stop offset="100%" stopColor="var(--accent)" stopOpacity="0.95"/>
+            </radialGradient>
+          </defs>
+          <circle cx="60" cy="60" r="44" fill="url(#welcomeG)"/>
+          <circle cx="60" cy="60" r="44" fill="none" stroke="var(--accent)" strokeWidth="1.5" opacity=".25"/>
+        </svg>
+      </div>
+      <h1 className="serif welcome-title">Daily</h1>
+      <p className="welcome-tag">A small, private place for the weather of your mind.</p>
+      <p className="muted welcome-sub">Track moods. Notice patterns. Carry a few tools for hard days. No noise, no judgment.</p>
+    </div>
+  );
+}
+
+function StepName({ data, set }) {
+  return (
+    <div className="step">
+      <h2 className="serif step-title">First — what should we call you?</h2>
+      <p className="muted step-sub">Just a first name. Or a nickname. Whatever feels like you.</p>
+      <input
+        className="big-input"
+        placeholder="Sarah"
+        value={data.name}
+        onChange={e => set("name", e.target.value)}
+        autoFocus
+      />
+      <label className="form-l caps xsmall muted">Pronouns (optional)</label>
+      <div className="seg inline">
+        {["she/her","he/him","they/them","other"].map(p => (
+          <button key={p} className={`seg-btn ${data.pronouns===p?"active":""}`} onClick={() => set("pronouns", p)}>{p}</button>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function StepReasons({ data, toggleReason }) {
+  const REASONS = [
+    { id: "anxiety",     l: "Anxiety",                  ic: "🍃" },
+    { id: "depression",  l: "Depression",               ic: "☔" },
+    { id: "stress",      l: "Stress & burnout",         ic: "🪨" },
+    { id: "panic",       l: "Panic attacks",            ic: "⚡" },
+    { id: "adhd",        l: "ADHD",                     ic: "🌀" },
+    { id: "ocd",         l: "OCD",                      ic: "🔁" },
+    { id: "ptsd",        l: "Trauma / PTSD",            ic: "🌑" },
+    { id: "bipolar",     l: "Bipolar",                  ic: "🌗" },
+    { id: "sleep",       l: "Sleep issues",             ic: "🌙" },
+    { id: "grief",       l: "Grief or loss",            ic: "🕯️" },
+    { id: "general",     l: "Just looking after my mind", ic: "🌱" },
+    { id: "support",     l: "Supporting someone else",  ic: "🤝" },
+  ];
+  return (
+    <div className="step">
+      <h2 className="serif step-title">What brings you to Daily?</h2>
+      <p className="muted step-sub">Pick any that fit. You can change this later — and we'll never treat these as a diagnosis.</p>
+      <div className="reason-grid">
+        {REASONS.map(r => {
+          const on = data.reasons.includes(r.id);
+          return (
+            <button key={r.id} className={`reason ${on ? "on" : ""}`} onClick={() => toggleReason(r.id)}>
+              <span className="reason-glyph">{r.ic}</span>
+              <span className="reason-l">{r.l}</span>
+              <span className={`reason-check ${on ? "on" : ""}`}>{on && <IconCheck size={11}/>}</span>
+            </button>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
+function StepCare({ data, set }) {
+  return (
+    <div className="step">
+      <h2 className="serif step-title">Anyone on your care team?</h2>
+      <p className="muted step-sub">If you have a therapist or psychiatrist, you can add them now — you control what (if anything) they ever see.</p>
+      <label className="form-l caps xsmall muted">Therapist / psychiatrist (optional)</label>
+      <input className="text-input" placeholder="Dr. Mira Patel" value={data.therapist} onChange={e => set("therapist", e.target.value)}/>
+      <label className="form-l caps xsmall muted">Their email or portal (optional)</label>
+      <input className="text-input" placeholder="mira@northbay.therapy" value={data.therapistEmail} onChange={e => set("therapistEmail", e.target.value)}/>
+      <div className="callout">
+        <IconLock size={14}/>
+        <span>Nothing is shared until you tap <strong>Share with my therapist</strong> on the Insights screen. You can revoke access any time.</span>
+      </div>
+    </div>
+  );
+}
+
+function StepReminders({ data, set }) {
+  const TIMES = ["07:00","08:00","09:00","10:00","12:00","17:00","20:00","21:00","22:00"];
+  return (
+    <div className="step">
+      <h2 className="serif step-title">When should we gently check in?</h2>
+      <p className="muted step-sub">One daily prompt to log your mood — soft, skippable, no streaks-or-die energy.</p>
+
+      <label className="form-l caps xsmall muted">Daily check-in time</label>
+      <div className="time-chips">
+        {TIMES.map(t => (
+          <button key={t} className={`time-chip ${data.checkinTime===t?"on":""}`} onClick={() => set("checkinTime", t)}>{formatTime(t)}</button>
+        ))}
+      </div>
+
+      <div className="onboard-toggle">
+        <div>
+          <div className="med-name">Remind me for medications</div>
+          <div className="muted xsmall">At each scheduled dose time</div>
+        </div>
+        <Toggle on={data.enableMedReminders} onChange={v => set("enableMedReminders", v)}/>
+      </div>
+      <div className="onboard-toggle">
+        <div>
+          <div className="med-name">Daily mood check-in</div>
+          <div className="muted xsmall">Once a day, soft notification</div>
+        </div>
+        <Toggle on={data.enableCheckinReminder} onChange={v => set("enableCheckinReminder", v)}/>
+      </div>
+    </div>
+  );
+}
+
+function StepPrivacy({ data, set }) {
+  return (
+    <div className="step">
+      <h2 className="serif step-title">Your data, your call.</h2>
+      <p className="muted step-sub">A few promises, simply put:</p>
+      <ul className="promise-list">
+        <li><span className="promise-ic"><IconLock size={14}/></span><div>Entries are encrypted on your device. We don't sell your data, ever.</div></li>
+        <li><span className="promise-ic"><IconShield size={14}/></span><div>You can export or delete everything in one tap.</div></li>
+        <li><span className="promise-ic"><IconShareTherapist size={14}/></span><div>Sharing is opt-in, per recipient, per session — never the whole vault.</div></li>
+        <li><span className="promise-ic"><IconAlert size={14}/></span><div>If we ever detect crisis language, we'll surface a 988 prompt — never an alarm, never reported.</div></li>
+      </ul>
+
+      <div className="onboard-toggle">
+        <div>
+          <div className="med-name">Lock with Face ID / fingerprint</div>
+          <div className="muted xsmall">Recommended if you share a phone</div>
+        </div>
+        <Toggle on={data.biometricLock} onChange={v => set("biometricLock", v)}/>
+      </div>
+
+      <button className={`consent-row ${data.consent?"on":""}`} onClick={() => set("consent", !data.consent)}>
+        <span className={`incl-check ${data.consent?"on":""}`}>{data.consent && <IconCheck size={11}/>}</span>
+        <span>I've read and agree to the <span className="link inline">privacy policy</span> and <span className="link inline">terms</span>.</span>
+      </button>
+    </div>
+  );
+}
+
+function StepReady({ data }) {
+  const reasons = data.reasons.slice(0, 3);
+  return (
+    <div className="step ready">
+      <div className="ready-mark">
+        <svg viewBox="0 0 80 80" width="64" height="64">
+          <circle cx="40" cy="40" r="36" fill="var(--positive)"/>
+          <path d="M24 40 L36 52 L56 28" fill="none" stroke="white" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round"/>
+        </svg>
+      </div>
+      <h2 className="serif step-title">All set, {data.name.split(" ")[0]}.</h2>
+      <p className="muted step-sub">You'll see your Today screen with a gentle check-in at {formatTime(data.checkinTime)}.</p>
+      <div className="ready-summary">
+        <div className="rs-row"><span className="rs-l">Checking in for</span><span className="rs-v">{reasons.length ? reasons.map(r => r[0].toUpperCase() + r.slice(1)).join(" · ") : "general wellbeing"}</span></div>
+        <div className="rs-row"><span className="rs-l">Daily prompt</span><span className="rs-v">{formatTime(data.checkinTime)}</span></div>
+        {data.therapist && <div className="rs-row"><span className="rs-l">Care team</span><span className="rs-v">{data.therapist}</span></div>}
+        <div className="rs-row"><span className="rs-l">Lock</span><span className="rs-v">{data.biometricLock ? "Face ID" : "None"}</span></div>
+      </div>
+    </div>
+  );
+}
+
+function formatTime(hhmm) {
+  const [h, m] = hhmm.split(":").map(Number);
+  const ampm = h >= 12 ? "PM" : "AM";
+  const hr = h % 12 || 12;
+  return `${hr}:${String(m).padStart(2,"0")} ${ampm}`;
+}
+
+function Toggle({ on, onChange }) {
+  return (
+    <button className={`toggle ${on?"on":""}`} onClick={() => onChange(!on)} aria-pressed={on}>
+      <span className="toggle-knob"/>
+    </button>
+  );
+}
+
+Object.assign(window, { Onboarding, Toggle, formatTime });
+
+</script>
+<script type="text/babel">
+/* Daily v2 — Settings, Profile, Reminders, History (Calendar) */
+const { useState: useState_S } = React;
+
+function ScreenSettings({ go, profile, setProfile, reminders, setReminders }) {
+  const [sub, setSub] = useState_S(null);
+  if (sub === "profile") return <SubProfile back={() => setSub(null)} profile={profile} setProfile={setProfile}/>;
+  if (sub === "reminders") return <SubReminders back={() => setSub(null)} reminders={reminders} setReminders={setReminders}/>;
+  if (sub === "privacy") return <SubPrivacy back={() => setSub(null)} profile={profile} setProfile={setProfile}/>;
+  if (sub === "care") return <SubCareTeam back={() => setSub(null)} profile={profile} setProfile={setProfile}/>;
+  if (sub === "connected") return <SubConnected back={() => setSub(null)}/>;
+  if (sub === "data") return <SubData back={() => setSub(null)}/>;
+  if (sub === "about") return <SubAbout back={() => setSub(null)}/>;
+
+  return (
+    <div className="scroll" data-screen-label="Settings">
+      <PageHeader title="Settings" onBack={() => go("today")}/>
+
+      <Card className="profile-summary">
+        <div className="profile-avatar">
+          <span className="serif">{(profile.name || "S")[0]}</span>
+        </div>
+        <div style={{flex:1, minWidth:0}}>
+          <div className="serif large">{profile.name || "Sarah"}</div>
+          <div className="muted xsmall">{profile.email || "sarah@example.com"}</div>
+        </div>
+        <button className="quiet-btn" onClick={() => setSub("profile")}>Edit</button>
+      </Card>
+
+      <SettingsGroup title="You">
+        <SettingsRow Ic={IconUser} label="Profile" sub="Name, pronouns, conditions" onClick={() => setSub("profile")}/>
+        <SettingsRow Ic={IconShareTherapist} label="Care team" sub={profile.therapist || "Add your therapist or psychiatrist"} onClick={() => setSub("care")}/>
+      </SettingsGroup>
+
+      <SettingsGroup title="Notifications">
+        <SettingsRow Ic={IconBell} label="Reminders" sub={`Daily check-in · ${formatTime(reminders.checkinTime)}`} onClick={() => setSub("reminders")}/>
+      </SettingsGroup>
+
+      <SettingsGroup title="Privacy">
+        <SettingsRow Ic={IconLock} label="Privacy & security" sub={profile.biometricLock ? "Face ID on" : "No app lock"} onClick={() => setSub("privacy")}/>
+        <SettingsRow Ic={IconShare} label="Data export & sharing" sub="Manage your data" onClick={() => setSub("data")}/>
+      </SettingsGroup>
+
+      <SettingsGroup title="Connected services">
+        <SettingsRow Ic={IconHeart} label="Apple Health / Health Connect" sub="Not connected" onClick={() => setSub("connected")}/>
+        <SettingsRow Ic={IconCalendar} label="Calendar" sub="For appointment reminders" onClick={() => setSub("connected")}/>
+      </SettingsGroup>
+
+      <SettingsGroup title="About">
+        <SettingsRow Ic={IconSparkle} label="What's new" sub="v0.4.2" onClick={() => setSub("about")}/>
+        <SettingsRow Ic={IconShield} label="Crisis resources" sub="988, safety plan, hotlines" onClick={() => go("care", { tab: "Toolkit" })}/>
+      </SettingsGroup>
+
+      <div className="settings-foot">
+        <button className="link danger">Sign out</button>
+        <div className="muted xsmall" style={{marginTop:6}}>Made with care · v0.4.2</div>
+      </div>
+    </div>
+  );
+}
+
+const SettingsGroup = ({ title, children }) => (
+  <section className="settings-group">
+    <SectionLabel>{title}</SectionLabel>
+    <Card className="settings-card">{children}</Card>
+  </section>
+);
+
+const SettingsRow = ({ Ic, label, sub, onClick, right }) => (
+  <button className="settings-row" onClick={onClick}>
+    <span className="settings-ic"><Ic size={16}/></span>
+    <span className="settings-meta">
+      <span className="settings-l">{label}</span>
+      <span className="muted xsmall">{sub}</span>
+    </span>
+    {right || <IconChevR size={14} className="op6"/>}
+  </button>
+);
+
+function SubProfile({ back, profile, setProfile }) {
+  const [draft, setDraft] = useState_S(profile);
+  const set = (k, v) => setDraft(d => ({ ...d, [k]: v }));
+  return (
+    <div className="scroll" data-screen-label="Profile">
+      <PageHeader title="Profile" onBack={back} action={<button className="link" onClick={() => { setProfile(draft); back(); }}>Save</button>}/>
+      <div className="form padded-x">
+        <label className="form-l caps xsmall muted">Display name</label>
+        <input className="text-input" value={draft.name} onChange={e => set("name", e.target.value)}/>
+
+        <label className="form-l caps xsmall muted">Pronouns</label>
+        <div className="seg inline">
+          {["she/her","he/him","they/them","other"].map(p => (
+            <button key={p} className={`seg-btn ${draft.pronouns===p?"active":""}`} onClick={() => set("pronouns", p)}>{p}</button>
+          ))}
+        </div>
+
+        <label className="form-l caps xsmall muted">Email</label>
+        <input className="text-input" value={draft.email || ""} onChange={e => set("email", e.target.value)} placeholder="you@example.com"/>
+
+        <label className="form-l caps xsmall muted">What you're working with</label>
+        <div className="tag-row" style={{marginTop:4}}>
+          {["Anxiety","Depression","ADHD","Panic","OCD","PTSD","Bipolar","Sleep","Grief","General"].map(t => {
+            const on = (draft.conditions || []).includes(t);
+            return (
+              <button key={t} className={`tag ${on?"on":""}`} onClick={() => set("conditions", on ? draft.conditions.filter(x => x !== t) : [...(draft.conditions || []), t])}>{t}</button>
+            );
+          })}
+        </div>
+
+        <div className="form-note muted xsmall">
+          <IconLock size={11}/> These stay on your device unless you choose to share.
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function SubReminders({ back, reminders, setReminders }) {
+  const [draft, setDraft] = useState_S(reminders);
+  const set = (k, v) => setDraft(d => ({ ...d, [k]: v }));
+  const TIMES = ["07:00","08:00","09:00","10:00","12:00","15:00","17:00","19:00","20:00","21:00","22:00"];
+
+  const save = () => { setReminders(draft); back(); };
+
+  return (
+    <div className="scroll" data-screen-label="Reminders">
+      <PageHeader title="Reminders" onBack={back} action={<button className="link" onClick={save}>Save</button>}/>
+
+      <SectionLabel>Daily check-in</SectionLabel>
+      <Card className="rem-card">
+        <div className="row between">
+          <div>
+            <div className="med-name">Mood prompt</div>
+            <div className="muted xsmall">A soft nudge to check in once a day</div>
+          </div>
+          <Toggle on={draft.checkin} onChange={v => set("checkin", v)}/>
+        </div>
+        {draft.checkin && (
+          <>
+            <label className="form-l caps xsmall muted">Time</label>
+            <div className="time-chips">
+              {TIMES.map(t => (
+                <button key={t} className={`time-chip ${draft.checkinTime===t?"on":""}`} onClick={() => set("checkinTime", t)}>{formatTime(t)}</button>
+              ))}
+            </div>
+          </>
+        )}
+      </Card>
+
+      <SectionLabel>Medication</SectionLabel>
+      <Card className="rem-card">
+        <div className="row between">
+          <div>
+            <div className="med-name">Dose reminders</div>
+            <div className="muted xsmall">At each scheduled dose time</div>
+          </div>
+          <Toggle on={draft.meds} onChange={v => set("meds", v)}/>
+        </div>
+        {draft.meds && (
+          <div className="rem-detail">
+            <div className="rem-row"><span>Sertraline 50mg</span><span className="muted">8:00 AM</span></div>
+            <div className="rem-row"><span>Sertraline 50mg</span><span className="muted">8:00 PM</span></div>
+            <div className="rem-row"><span>Propranolol 10mg</span><span className="muted">As needed</span></div>
+            <button className="link" style={{padding: "8px 0"}}>+ Manage med times</button>
+          </div>
+        )}
+      </Card>
+
+      <SectionLabel>Quiet hours</SectionLabel>
+      <Card className="rem-card">
+        <div className="row between">
+          <div>
+            <div className="med-name">Don't disturb</div>
+            <div className="muted xsmall">No notifications during these hours</div>
+          </div>
+          <Toggle on={draft.quiet} onChange={v => set("quiet", v)}/>
+        </div>
+        {draft.quiet && (
+          <div className="quiet-row">
+            <div className="quiet-block">
+              <div className="caps xsmall muted">From</div>
+              <div className="serif large">10:00 PM</div>
+            </div>
+            <div className="quiet-line"/>
+            <div className="quiet-block">
+              <div className="caps xsmall muted">Until</div>
+              <div className="serif large">7:30 AM</div>
+            </div>
+          </div>
+        )}
+      </Card>
+
+      <SectionLabel>Smart suggestions</SectionLabel>
+      <Card className="rem-card">
+        <div className="row between">
+          <div>
+            <div className="med-name">Adaptive nudges</div>
+            <div className="muted xsmall">If you tend to feel anxious on Tuesdays, we'll suggest a breathing exercise that morning.</div>
+          </div>
+          <Toggle on={draft.adaptive} onChange={v => set("adaptive", v)}/>
+        </div>
+      </Card>
+    </div>
+  );
+}
+
+function SubPrivacy({ back, profile, setProfile }) {
+  const [draft, setDraft] = useState_S(profile);
+  const set = (k, v) => setDraft(d => ({ ...d, [k]: v }));
+  return (
+    <div className="scroll" data-screen-label="Privacy">
+      <PageHeader title="Privacy & security" onBack={back} action={<button className="link" onClick={() => { setProfile(draft); back(); }}>Save</button>}/>
+
+      <Card className="rem-card">
+        <div className="row between">
+          <div>
+            <div className="med-name">App lock</div>
+            <div className="muted xsmall">Use Face ID / fingerprint to unlock</div>
+          </div>
+          <Toggle on={draft.biometricLock} onChange={v => set("biometricLock", v)}/>
+        </div>
+      </Card>
+      <Card className="rem-card">
+        <div className="row between">
+          <div>
+            <div className="med-name">Hide previews</div>
+            <div className="muted xsmall">Mood/entry text won't show in notifications</div>
+          </div>
+          <Toggle on={draft.hidePreviews ?? true} onChange={v => set("hidePreviews", v)}/>
+        </div>
+      </Card>
+      <Card className="rem-card">
+        <div className="row between">
+          <div>
+            <div className="med-name">Anonymous analytics</div>
+            <div className="muted xsmall">Help us improve. No content, ever.</div>
+          </div>
+          <Toggle on={draft.analytics ?? false} onChange={v => set("analytics", v)}/>
+        </div>
+      </Card>
+      <Card className="rem-card">
+        <div className="row between">
+          <div>
+            <div className="med-name">Crisis-language detection</div>
+            <div className="muted xsmall">Surface 988 if we notice phrases. On-device only, never reported.</div>
+          </div>
+          <Toggle on={draft.crisisDetect ?? true} onChange={v => set("crisisDetect", v)}/>
+        </div>
+      </Card>
+    </div>
+  );
+}
+
+function SubCareTeam({ back, profile, setProfile }) {
+  const [draft, setDraft] = useState_S(profile);
+  const set = (k, v) => setDraft(d => ({ ...d, [k]: v }));
+  return (
+    <div className="scroll" data-screen-label="CareTeam">
+      <PageHeader title="Care team" onBack={back} action={<button className="link" onClick={() => { setProfile(draft); back(); }}>Save</button>}/>
+
+      <div className="padded-x muted small mood-prompt">
+        People you want to be able to share with — therapists, psychiatrists, a trusted family member. You always choose what they see.
+      </div>
+
+      <Card className="rem-card">
+        <label className="form-l caps xsmall muted">Therapist</label>
+        <input className="text-input" placeholder="Dr. Mira Patel" value={draft.therapist || ""} onChange={e => set("therapist", e.target.value)}/>
+        <label className="form-l caps xsmall muted">Email or portal</label>
+        <input className="text-input" placeholder="mira@northbay.therapy" value={draft.therapistEmail || ""} onChange={e => set("therapistEmail", e.target.value)}/>
+      </Card>
+
+      <Card className="rem-card">
+        <label className="form-l caps xsmall muted">Psychiatrist</label>
+        <input className="text-input" placeholder="optional" value={draft.psychiatrist || ""} onChange={e => set("psychiatrist", e.target.value)}/>
+      </Card>
+
+      <Card className="rem-card">
+        <label className="form-l caps xsmall muted">Trusted contact</label>
+        <input className="text-input" placeholder="A friend, partner, parent…" value={draft.trustedContact || ""} onChange={e => set("trustedContact", e.target.value)}/>
+        <div className="muted xsmall" style={{marginTop:8}}>
+          Reachable from your safety plan in one tap. They don't see your data unless you share.
+        </div>
+      </Card>
+    </div>
+  );
+}
+
+function SubConnected({ back }) {
+  return (
+    <div className="scroll" data-screen-label="Connected">
+      <PageHeader title="Connected services" onBack={back}/>
+      {[
+        { name: "Apple Health", desc: "Read sleep & activity · write nothing", connected: false, Ic: IconHeart },
+        { name: "Health Connect (Android)", desc: "Read sleep & activity", connected: false, Ic: IconHeart },
+        { name: "Calendar", desc: "Therapy + med-pickup reminders", connected: false, Ic: IconCalendar },
+        { name: "Spotify", desc: "Curate calm playlists for breathing", connected: false, Ic: IconWave },
+      ].map(s => {
+        const Ic = s.Ic;
+        return (
+          <Card key={s.name} className="settings-card" style={{padding:0}}>
+            <div className="settings-row">
+              <span className="settings-ic"><Ic size={16}/></span>
+              <span className="settings-meta">
+                <span className="settings-l">{s.name}</span>
+                <span className="muted xsmall">{s.desc}</span>
+              </span>
+              <button className="quiet-btn">{s.connected ? "Connected" : "Connect"}</button>
+            </div>
+          </Card>
+        );
+      })}
+    </div>
+  );
+}
+
+function SubData({ back }) {
+  return (
+    <div className="scroll" data-screen-label="Data">
+      <PageHeader title="Data" onBack={back}/>
+      <Card className="rem-card">
+        <div className="row between">
+          <div>
+            <div className="med-name">Export everything</div>
+            <div className="muted xsmall">JSON · CSV · printable PDF</div>
+          </div>
+          <button className="quiet-btn"><IconShare size={12}/> Export</button>
+        </div>
+      </Card>
+      <Card className="rem-card">
+        <div className="row between">
+          <div>
+            <div className="med-name">Delete account &amp; all data</div>
+            <div className="muted xsmall">Permanent. There's no recovery.</div>
+          </div>
+          <button className="quiet-btn danger">Delete</button>
+        </div>
+      </Card>
+    </div>
+  );
+}
+
+function SubAbout({ back }) {
+  return (
+    <div className="scroll" data-screen-label="About">
+      <PageHeader title="What's new" onBack={back}/>
+      <Card className="about-card">
+        <div className="caps xsmall muted">v0.4.2 · April</div>
+        <div className="serif large">Insights now spot Tuesday patterns</div>
+        <div className="muted small" style={{marginTop:6}}>If your low-mood days cluster on a weekday, you'll see it.</div>
+      </Card>
+      <Card className="about-card">
+        <div className="caps xsmall muted">v0.4 · March</div>
+        <div className="serif large">Quick-mood, anywhere</div>
+        <div className="muted small" style={{marginTop:6}}>Tap the + at the bottom for a one-tap mood log.</div>
+      </Card>
+      <Card className="about-card">
+        <div className="caps xsmall muted">v0.3 · February</div>
+        <div className="serif large">Box breathing came home</div>
+        <div className="muted small" style={{marginTop:6}}>An animated orb, four count, soft pace.</div>
+      </Card>
+    </div>
+  );
+}
+
+function ScreenHistory({ go, entries }) {
+  const now = new Date();
+  const [monthOffset, setMonthOffset] = useState_S(0);
+  const [selectedDay, setSelectedDay] = useState_S(null);
+
+  const month = new Date(now.getFullYear(), now.getMonth() + monthOffset, 1);
+  const monthName = month.toLocaleDateString(undefined, { month: "long", year: "numeric" });
+  const daysInMonth = new Date(month.getFullYear(), month.getMonth() + 1, 0).getDate();
+  const startDay = new Date(month.getFullYear(), month.getMonth(), 1).getDay();
+
+  const moodForDay = (d) => {
+    const e = entries.find(en => {
+      const dt = new Date(en.t);
+      return en.kind === "mood" && dt.getFullYear() === month.getFullYear() && dt.getMonth() === month.getMonth() && dt.getDate() === d;
+    });
+    if (e) return e.color;
+    if (monthOffset === 0 && d > now.getDate()) return null;
+    const seed = (d * 31 + month.getMonth() * 7 + month.getFullYear()) % 5;
+    return ["#9C7BA7","#7B8FA8","#C9C2A0","#7AA68B","#D7A65C"][seed];
+  };
+
+  const cells = [];
+  for (let i = 0; i < startDay; i++) cells.push(null);
+  for (let d = 1; d <= daysInMonth; d++) cells.push(d);
+
+  const today = new Date();
+  const isToday = (d) => monthOffset === 0 && d === today.getDate();
+
+  const dayEntries = selectedDay
+    ? entries.filter(e => {
+        const dt = new Date(e.t);
+        return dt.getFullYear() === month.getFullYear() && dt.getMonth() === month.getMonth() && dt.getDate() === selectedDay;
+      })
+    : [];
+
+  return (
+    <div className="scroll" data-screen-label="History">
+      <PageHeader title="History" onBack={() => go("today")} subtitle="A month at a glance"/>
+
+      <div className="month-nav">
+        <button className="icon-btn" onClick={() => setMonthOffset(monthOffset - 1)}><IconBack size={16}/></button>
+        <div className="month-name serif large">{monthName}</div>
+        <button className="icon-btn" disabled={monthOffset >= 0} onClick={() => setMonthOffset(monthOffset + 1)}>
+          <span style={{transform: "scaleX(-1)", display:"inline-flex"}}><IconBack size={16}/></span>
+        </button>
+      </div>
+
+      <div className="dow-head">
+        {["S","M","T","W","T","F","S"].map((d, i) => <span key={i}>{d}</span>)}
+      </div>
+
+      <div className="cal-grid">
+        {cells.map((d, i) => {
+          if (!d) return <div key={i} className="cal-cell cal-empty"/>;
+          const color = moodForDay(d);
+          const sel = selectedDay === d;
+          return (
+            <button key={i} className={`cal-cell ${sel ? "sel" : ""} ${isToday(d) ? "today" : ""}`} onClick={() => setSelectedDay(d)}>
+              <span className="cal-d">{d}</span>
+              {color && <span className="cal-dot" style={{ background: color }}/>}
+            </button>
+          );
+        })}
+      </div>
+
+      <div className="cal-legend">
+        {[
+          { c: "#9C7BA7", l: "Rough" },
+          { c: "#7B8FA8", l: "Low" },
+          { c: "#C9C2A0", l: "Okay" },
+          { c: "#7AA68B", l: "Good" },
+          { c: "#D7A65C", l: "Great" },
+        ].map(s => (
+          <span key={s.l} className="legend-item"><span className="legend-sw" style={{ background: s.c }}/>{s.l}</span>
+        ))}
+      </div>
+
+      {selectedDay && (
+        <>
+          <SectionLabel>
+            {month.toLocaleDateString(undefined, { weekday: "long", month: "long" })} {selectedDay}
+          </SectionLabel>
+          {dayEntries.length ? dayEntries.map(e => (
+            <Card key={e.id} className="t-card" style={{margin: "0 var(--pad) 10px"}}>
+              {e.kind === "mood" ? (
+                <>
+                  <div className="row between">
+                    <div className="muted xsmall caps">{new Date(e.t).toLocaleTimeString([], {hour:"numeric", minute:"2-digit"})}</div>
+                    <span style={{width:12, height:12, borderRadius:4, background: e.color, display:"inline-block"}}/>
+                  </div>
+                  <div className="serif large">{e.label} <span className="muted xsmall">· {e.intensity ? `${e.intensity}/10` : "quick"}</span></div>
+                  {e.note && <div className="entry-body">"{e.note}"</div>}
+                </>
+              ) : (
+                <>
+                  <div className="muted xsmall caps">{new Date(e.t).toLocaleTimeString([], {hour:"numeric", minute:"2-digit"})}</div>
+                  <div className="entry-body serif large-text">{e.text}</div>
+                </>
+              )}
+            </Card>
+          )) : (
+            <div className="empty">Nothing logged this day.</div>
+          )}
+        </>
+      )}
+    </div>
+  );
+}
+
+Object.assign(window, { ScreenSettings, ScreenHistory });
+
+</script>
+<script type="text/babel">
+/* Daily v2 — main app */
+const { useState: useState_A, useEffect: useEffect_A } = React;
+
+const PALETTES = {
+  Sage: {
+    bg: "#E8EBDD", surface: "#F7F6EE", text: "#22281F", muted: "#6F7568",
+    accent: "#5F7A55", accentInk: "#F7F6EE", accentSoft: "#B5C5A6",
+    line: "#D2D8C2", positive: "#7BA68B", info: "#7B96AF",
+    haze: "radial-gradient(70% 60% at 20% 10%, #D2E2BC, transparent), radial-gradient(70% 60% at 90% 90%, #C3CFAB, transparent), #DAE0C7",
+  },
+  Petal: {
+    bg: "#F0E5DC", surface: "#FBF4ED", text: "#2A1F26", muted: "#857481",
+    accent: "#B5728A", accentInk: "#FBF4ED", accentSoft: "#E6BAC4",
+    line: "#E5D3CC", positive: "#7AA68B", info: "#7B96AF",
+    haze: "radial-gradient(70% 60% at 20% 10%, #F4D4D8, transparent), radial-gradient(70% 60% at 90% 90%, #E6BFCA, transparent), #ECD5D2",
+  },
+  Cocoa: {
+    bg: "#EFE3D3", surface: "#FBF5EC", text: "#2A1F1B", muted: "#8B7B70",
+    accent: "#B26A4A", accentInk: "#FBF5EC", accentSoft: "#E5B58B",
+    line: "#E0D0B7", positive: "#7AA68B", info: "#7B96AF",
+    haze: "radial-gradient(80% 70% at 30% 20%, #F6DDB6, transparent), radial-gradient(70% 60% at 80% 80%, #E5B594, transparent), #EFD9B7",
+  },
+  Dusk: {
+    bg: "#1F1F26", surface: "#2A2A33", text: "#F1ECE4", muted: "#9892A0",
+    accent: "#C7A5D6", accentInk: "#1F1F26", accentSoft: "#7E6889",
+    line: "#3A3845", positive: "#9BC0A1", info: "#A6B8C9",
+    haze: "radial-gradient(80% 70% at 30% 20%, #2C2B35, transparent), radial-gradient(70% 60% at 80% 80%, #1E1D24, transparent), #181820",
+  },
+};
+
+function applyTheme(p) {
+  const r = document.documentElement.style;
+  Object.entries({
+    "--bg": p.bg, "--surface": p.surface, "--text": p.text, "--muted": p.muted,
+    "--accent": p.accent, "--accent-ink": p.accentInk, "--accent-soft": p.accentSoft,
+    "--line": p.line, "--positive": p.positive, "--info": p.info, "--haze": p.haze,
+  }).forEach(([k, v]) => r.setProperty(k, v));
+}
+
+function App() {
+  const [tweaks, setTweak] = useTweaks(TWEAK_DEFAULTS);
+  const palette = PALETTES[tweaks.palette] || PALETTES.Sage;
+  useEffect_A(() => {
+    applyTheme(palette);
+    document.body.dataset.density = tweaks.density;
+    document.body.dataset.radius = tweaks.radius;
+  }, [palette, tweaks.density, tweaks.radius]);
+
+  const [view, setView] = useState_A("today");
+  const [prev, setPrev] = useState_A(null);
+  const [viewProps, setViewProps] = useState_A({});
+  const [onboarding, setOnboarding] = useState_A(!tweaks.onboarded);
+
+  const NAV_ORDER = ["today","care","mood","journal","insights"];
+  const dir = (() => {
+    if (!prev) return 0;
+    const a = NAV_ORDER.indexOf(prev), b = NAV_ORDER.indexOf(view);
+    if (a === -1 || b === -1) return 0;
+    return b > a ? 1 : -1;
+  })();
+
+  const go = (v, props = {}) => { setPrev(view); setView(v); setViewProps(props); };
+
+  const [logOpen, setLogOpen] = useState_A(false);
+
+  const [profile, setProfile] = useState_A({
+    name: tweaks.name || "Sarah",
+    pronouns: "she/her",
+    email: "sarah@example.com",
+    conditions: ["Anxiety","Depression"],
+    therapist: "Dr. Mira Patel",
+    therapistEmail: "mira@northbay.therapy",
+    biometricLock: true,
+    hidePreviews: true,
+    analytics: false,
+    crisisDetect: true,
+    trustedContact: "",
+    psychiatrist: "",
+  });
+  const [reminders, setReminders] = useState_A({
+    checkin: true, checkinTime: "09:00",
+    meds: true,
+    quiet: true,
+    adaptive: true,
+  });
+
+  const [meds, setMeds] = useState_A([
+    { id: 1, name: "Sertraline",  dose: "50mg", time: "8:00 AM", note: "with breakfast", taken: true,  takenAt: "8:12 AM" },
+    { id: 2, name: "Propranolol", dose: "10mg", time: "12:00 PM", note: "as needed",     taken: false },
+    { id: 3, name: "Sertraline",  dose: "50mg", time: "8:00 PM", note: "with dinner",    taken: false },
+  ]);
+
+  const [mood, setMood] = useState_A({ id: "good", label: "Good", color: "#7AA68B", t: Date.now() - 3600e3 });
+
+  const [symptoms, setSymptoms] = useState_A([
+    { id: 1, name: "Anxiety",            time: "11:30 AM", note: "before standup", sev: 6 },
+    { id: 2, name: "Brain fog",          time: "9:45 AM",  note: "couldn't focus", sev: 4 },
+    { id: 3, name: "Tight chest",        time: "8:20 AM",  note: "after the email", sev: 5 },
+  ]);
+
+  const [entries, setEntries] = useState_A([
+    { id: 1001, kind: "mood", label: "Hopeful", color: "#D7A65C", intensity: 6, note: "Sun on my face this morning. Brief but real.", tags: ["alone"], t: Date.now() - 4*3600e3 },
+    { id: 1002, kind: "note", text: "Started the day anxious about the meeting. Did box breathing for 4 min and it actually helped a little. I want to remember that.", t: Date.now() - 6*3600e3 },
+    { id: 1003, kind: "mood", label: "Worried", color: "#9C7BA7", intensity: 7, note: "Email from Mom landed in the worst possible way.", tags: ["family"], t: Date.now() - 8*3600e3 },
+    { id: 1004, kind: "mood", label: "Steady",  color: "#7AA68B", intensity: 5, note: "", tags: [], t: Date.now() - 26*3600e3 },
+    { id: 1005, kind: "note", text: "Therapy moved us toward thinking about needs versus wants. Made me uncomfortable in a useful way.", t: Date.now() - 30*3600e3 },
+  ]);
+
+  const [toast, setToastT] = useToast();
+  const undoLast = (t) => {
+    if (t.kind === "med" && t.id) setMeds(meds.map(m => m.id === t.id ? {...m, taken: !m.taken} : m));
+    if (t.kind === "mood") setMood(null);
+  };
+
+  const screens = {
+    today:    <ScreenToday name={profile.name} mood={mood} setMood={setMood} meds={meds} setMeds={setMeds} journalCount={entries.filter(e=>e.kind==="note").length} breathingMin={4} go={go} toast={setToastT} openLog={() => setLogOpen(true)} openSettings={() => go("settings")}/>,
+    care:     <ScreenCare go={go} meds={meds} setMeds={setMeds} symptoms={symptoms} setSymptoms={setSymptoms} toast={setToastT} initialTab={viewProps.tab || "Meds"} initialFocus={viewProps.focus}/>,
+    mood:     <ScreenMood go={go} mood={mood} setMood={(m) => { setMood(m); setEntries([{ id: Date.now(), kind: "mood", ...m }, ...entries]); }} toast={setToastT}/>,
+    journal:  <ScreenJournal go={go} entries={entries} setEntries={setEntries} mood={mood} openCompose={viewProps.compose}/>,
+    insights: <ScreenInsights go={go}/>,
+    settings: <ScreenSettings go={go} profile={profile} setProfile={setProfile} reminders={reminders} setReminders={setReminders}/>,
+    history:  <ScreenHistory go={go} entries={entries}/>,
+  };
+
+  if (onboarding) {
+    return (
+      <>
+        <div className="ambient" style={{ background: palette.haze }}/>
+        <div className="phone-wrap">
+          <div className="phone">
+            <div className="screen">
+              <div className="notch"/>
+              <div className="status-bar">
+                <span>9:41</span>
+                <span className="status-right">
+                  <svg width="14" height="10" viewBox="0 0 14 10"><path d="M1 8.5l2-3 2 1 4-6 4 8" fill="none" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round"/></svg>
+                  <svg width="14" height="10" viewBox="0 0 14 10"><rect x="0.5" y="2" width="11" height="6" rx="1" fill="none" stroke="currentColor" strokeWidth="1"/><rect x="2" y="3.5" width="8" height="3" fill="currentColor"/><rect x="12" y="3.5" width="1.2" height="3" fill="currentColor"/></svg>
+                </span>
+              </div>
+              <Onboarding
+                defaultName={profile.name}
+                onComplete={(data) => {
+                  setProfile(p => ({
+                    ...p,
+                    name: data.name || p.name,
+                    pronouns: data.pronouns || p.pronouns,
+                    therapist: data.therapist || p.therapist,
+                    therapistEmail: data.therapistEmail || p.therapistEmail,
+                    conditions: data.reasons.length ? data.reasons : p.conditions,
+                    biometricLock: data.biometricLock,
+                  }));
+                  setReminders(r => ({
+                    ...r,
+                    checkinTime: data.checkinTime || r.checkinTime,
+                    meds: data.enableMedReminders,
+                    checkin: data.enableCheckinReminder,
+                  }));
+                  setTweak("onboarded", true);
+                  setOnboarding(false);
+                }}
+              />
+            </div>
+          </div>
+        </div>
+        <TweaksPanel title="Tweaks">
+          <TweakButton label="Skip onboarding" onClick={() => { setTweak("onboarded", true); setOnboarding(false); }}/>
+        </TweaksPanel>
+      </>
+    );
+  }
+
+  return (
+    <>
+      <div className="ambient" style={{ background: palette.haze }}/>
+      <div className="phone-wrap">
+        <div className="phone">
+          <div className="screen">
+            <div className="notch"/>
+            <div className="status-bar">
+              <span>9:41</span>
+              <span className="status-right">
+                <svg width="14" height="10" viewBox="0 0 14 10"><path d="M1 8.5l2-3 2 1 4-6 4 8" fill="none" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round"/></svg>
+                <svg width="14" height="10" viewBox="0 0 14 10"><rect x="0.5" y="2" width="11" height="6" rx="1" fill="none" stroke="currentColor" strokeWidth="1"/><rect x="2" y="3.5" width="8" height="3" fill="currentColor"/><rect x="12" y="3.5" width="1.2" height="3" fill="currentColor"/></svg>
+              </span>
+            </div>
+            <div className={`view-stack dir-${dir}`} key={view}>
+              {screens[view]}
+            </div>
+            <BottomNav active={view} go={go} onLog={() => setLogOpen(true)}/>
+            <Toast toast={toast} onClose={() => setToastT(null)} onUndo={undoLast}/>
+          </div>
+        </div>
+      </div>
+
+      <LogSheet
+        open={logOpen}
+        onClose={() => setLogOpen(false)}
+        go={go}
+        onQuickMood={(m) => {
+          const entry = { id: m.id, label: m.l, color: m.c, t: Date.now(), quick: true };
+          setMood(entry);
+          setEntries([{ id: Date.now(), kind: "mood", ...entry }, ...entries]);
+          setToastT({ msg: `Logged "${m.l}"`, undo: true, kind: "mood" });
+        }}
+      />
+
+      <TweaksPanel title="Tweaks">
+        <TweakSection title="Theme">
+          <TweakColorKeyed
+            value={tweaks.palette}
+            onChange={v => setTweak("palette", v)}
+            options={[
+              { key: "Sage",   swatches: ['#5F7A55','#B5C5A6','#E8EBDD'] },
+              { key: "Petal",  swatches: ['#B5728A','#E6BAC4','#F0E5DC'] },
+              { key: "Cocoa",  swatches: ['#B26A4A','#E5B58B','#EFE3D3'] },
+              { key: "Dusk",   swatches: ['#C7A5D6','#2A2A33','#1F1F26'] },
+            ]}
+          />
+        </TweakSection>
+        <TweakSection title="Layout">
+          <TweakRadio label="Density" value={tweaks.density} onChange={v => setTweak("density", v)} options={["Comfy","Compact"]}/>
+          <TweakRadio label="Corners" value={tweaks.radius} onChange={v => setTweak("radius", v)} options={["Soft","Sharp"]}/>
+        </TweakSection>
+        <TweakSection title="Profile">
+          <TweakText label="Name" value={tweaks.name} onChange={v => setTweak("name", v)} placeholder="Sarah"/>
+        </TweakSection>
+        <TweakSection title="Jump to">
+          <div className="tweak-nav-grid">
+            {[
+              {k:"today",label:"Today"},{k:"care",label:"Care"},{k:"mood",label:"Mood"},
+              {k:"journal",label:"Journal"},{k:"insights",label:"Insights"},
+              {k:"settings",label:"Settings"},{k:"history",label:"History"},
+            ].map(s => (
+              <button key={s.k} className={`tweak-nav-btn ${view===s.k?"active":""}`} onClick={() => go(s.k)}>{s.label}</button>
+            ))}
+          </div>
+          <TweakButton label="Open log sheet" onClick={() => setLogOpen(true)}/>
+          <TweakButton label="Replay onboarding" onClick={() => { setTweak("onboarded", false); setOnboarding(true); }} secondary/>
+        </TweakSection>
+      </TweaksPanel>
+    </>
+  );
+}
+
+/* TweakColor that stores keys, custom card layout */
+function TweakColorKeyed({ value, onChange, options }) {
+  return (
+    <div className="tweak-row">
+      <div className="tweak-color-row">
+        {options.map(o => {
+          const sel = value === o.key;
+          return (
+            <button key={o.key} className={`color-swatch ${sel?"selected":""}`} onClick={() => onChange(o.key)} title={o.key}>
+              <span className="cs-main" style={{ background: o.swatches[0] }}/>
+              <span className="cs-grid">
+                {o.swatches.slice(1).map((c, j) => <span key={j} style={{ background: c }}/>)}
+              </span>
+              <span className="cs-name">{o.key}</span>
+            </button>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
+/* Bottom nav */
+function BottomNav({ active, go, onLog }) {
+  const items = [
+    { k: "today",    label: "Today",    Ic: IconHome     },
+    { k: "care",     label: "Care",     Ic: IconToolkit  },
+    { k: "log",      label: "",         Ic: IconPlus, fab: true },
+    { k: "journal",  label: "Journal",  Ic: IconJournal  },
+    { k: "insights", label: "Insights", Ic: IconInsight  },
+  ];
+  return (
+    <nav className="bnav">
+      {items.map(it => {
+        const Ic = it.Ic;
+        if (it.fab) {
+          return (
+            <button key={it.k} className="bnav-fab" onClick={onLog} aria-label="Log something">
+              <span className="bnav-fab-inner"><Ic size={22}/></span>
+            </button>
+          );
+        }
+        return (
+          <button key={it.k} className={`bnav-btn ${active===it.k?"active":""}`} onClick={() => go(it.k)}>
+            <Ic size={20}/>
+            <span>{it.label}</span>
+          </button>
+        );
+      })}
+    </nav>
+  );
+}
+
+const TWEAK_DEFAULTS = /*EDITMODE-BEGIN*/{
+  "palette": "Sage",
+  "density": "Comfy",
+  "radius": "Soft",
+  "name": "Sarah",
+  "onboarded": false
+}/*EDITMODE-END*/;
+
+ReactDOM.createRoot(document.getElementById("root")).render(<App/>);
+
+</script>
+
+<!-- PWA: inline manifest + service worker registration -->
+<script>
+(function () {
+  /* ── Manifest ── */
+  var manifest = {
+  "name": "Daily — for your mind",
+  "short_name": "Daily",
+  "description": "A small, private place for the weather of your mind. Track moods, medications, and patterns.",
+  "start_url": "./Daily v2.html",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#E8EBDD",
+  "theme_color": "#5F7A55",
+  "categories": ["health", "lifestyle"],
+  "icons": [
+    {
+      "src": "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512'%3E%3Crect width='512' height='512' rx='115' fill='%23E8EBDD'/%3E%3Ccircle cx='256' cy='256' r='160' fill='%235F7A55' opacity='.15'/%3E%3Ccircle cx='256' cy='256' r='110' fill='%235F7A55' opacity='.3'/%3E%3Ccircle cx='256' cy='256' r='64' fill='%235F7A55'/%3E%3C/svg%3E",
+      "sizes": "512x512",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 192 192'%3E%3Crect width='192' height='192' rx='40' fill='%23E8EBDD'/%3E%3Ccircle cx='96' cy='96' r='60' fill='%235F7A55' opacity='.15'/%3E%3Ccircle cx='96' cy='96' r='40' fill='%235F7A55' opacity='.3'/%3E%3Ccircle cx='96' cy='96' r='24' fill='%235F7A55'/%3E%3C/svg%3E",
+      "sizes": "192x192",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ],
+  "screenshots": [],
+  "prefer_related_applications": false
+}
+;
+  var mBlob = new Blob([JSON.stringify(manifest)], { type: 'application/manifest+json' });
+  var mURL  = URL.createObjectURL(mBlob);
+  var link  = document.createElement('link');
+  link.rel  = 'manifest'; link.href = mURL;
+  document.head.appendChild(link);
+
+  /* ── Service Worker (only works over HTTPS or localhost) ── */
+  if ('serviceWorker' in navigator) {
+    var swCode = [
+      "const CACHE='daily-v2-1';",
+      "self.addEventListener('install',e=>{self.skipWaiting();});",
+      "self.addEventListener('activate',e=>{self.clients.claim();});",
+      "self.addEventListener('fetch',e=>{",
+      "  e.respondWith(caches.open(CACHE).then(c=>",
+      "    c.match(e.request).then(r=>r||fetch(e.request).then(res=>{",
+      "      if(res&&res.ok)c.put(e.request,res.clone());return res;",
+      "    }))",
+      "  ));",
+      "});"
+    ].join('\n');
+    var swBlob = new Blob([swCode], { type: 'application/javascript' });
+    var swURL  = URL.createObjectURL(swBlob);
+    navigator.serviceWorker.register(swURL)
+      .then(function(r){ console.log('[Daily] SW registered', r.scope); })
+      .catch(function(e){ console.log('[Daily] SW skipped (needs HTTPS):', e.message); });
+  }
+})();
+</script>
+</body>
+</html>
