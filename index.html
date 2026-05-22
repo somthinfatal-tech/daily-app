@@ -4239,7 +4239,9 @@ function App() {
   const [view, setView] = useState_A("today");
   const [prev, setPrev] = useState_A(null);
   const [viewProps, setViewProps] = useState_A({});
-  const [onboarding, setOnboarding] = useState_A(!tweaks.onboarded);
+  const [onboarding, setOnboarding] = useState_A(() => {
+    try { return !localStorage.getItem("daily-onboarded"); } catch { return true; }
+  });
 
   const NAV_ORDER = ["today","care","mood","journal","insights"];
   const dir = (() => {
@@ -4366,7 +4368,7 @@ function App() {
                     meds: data.enableMedReminders,
                     checkin: data.enableCheckinReminder,
                   }));
-                  setTweak("onboarded", true);
+                  try { localStorage.setItem("daily-onboarded", "1"); } catch {}
                   setOnboarding(false);
                 }}
               />
@@ -4374,7 +4376,7 @@ function App() {
           </div>
         </div>
         <TweaksPanel title="Tweaks">
-          <TweakButton label="Skip onboarding" onClick={() => { setTweak("onboarded", true); setOnboarding(false); }}/>
+          <TweakButton label="Skip onboarding" onClick={() => { try { localStorage.setItem("daily-onboarded", "1"); } catch {} setOnboarding(false); }}/>
         </TweaksPanel>
       </>
     );
@@ -4446,7 +4448,7 @@ function App() {
             ))}
           </div>
           <TweakButton label="Open log sheet" onClick={() => setLogOpen(true)}/>
-          <TweakButton label="Replay onboarding" onClick={() => { setTweak("onboarded", false); setOnboarding(true); }} secondary/>
+          <TweakButton label="Replay onboarding" onClick={() => { try { localStorage.removeItem("daily-onboarded"); } catch {} setOnboarding(true); }} secondary/>
         </TweakSection>
       </TweaksPanel>
     </>
@@ -4509,8 +4511,7 @@ function BottomNav({ active, go, onLog }) {
 const TWEAK_DEFAULTS = /*EDITMODE-BEGIN*/{
   "palette": "Sage",
   "density": "Comfy",
-  "radius": "Soft",
-  "onboarded": false
+  "radius": "Soft"
 }/*EDITMODE-END*/;
 
 ReactDOM.createRoot(document.getElementById("root")).render(<App/>);
