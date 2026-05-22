@@ -3210,7 +3210,7 @@ function StepName({ data, set }) {
       <p className="muted step-sub">Just a first name. Or a nickname. Whatever feels like you.</p>
       <input
         className="big-input"
-        placeholder="Sarah"
+        placeholder="Your name"
         value={data.name}
         onChange={e => set("name", e.target.value)}
         autoFocus
@@ -3410,11 +3410,11 @@ function ScreenSettings({ go, profile, setProfile, reminders, setReminders }) {
 
       <Card className="profile-summary">
         <div className="profile-avatar">
-          <span className="serif">{(profile.name || "S")[0]}</span>
+          <span className="serif">{(profile.name || "?")[0]}</span>
         </div>
         <div style={{flex:1, minWidth:0}}>
-          <div className="serif large">{profile.name || "Sarah"}</div>
-          <div className="muted xsmall">{profile.email || "sarah@example.com"}</div>
+          <div className="serif large">{profile.name || "Your name"}</div>
+          <div className="muted xsmall">{profile.email || "Add your email"}</div>
         </div>
         <button className="quiet-btn" onClick={() => setSub("profile")}>Edit</button>
       </Card>
