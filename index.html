@@ -2014,6 +2014,14 @@ function PaneMeds({ meds, setMeds, toast }) {
   /* ── unique profiles for "Your medications" section ── */
   const profiles = [...new Map(meds.map(m => [`${m.name}|${m.dose}`, m])).values()];
 
+  /* ── autocomplete suggestions (computed outside JSX) ── */
+  const medSuggestions = (showSuggestions && medSearch.length >= 1)
+    ? MED_DB.filter(m =>
+        m.name.toLowerCase().includes(medSearch.toLowerCase()) ||
+        (m.brand && m.brand.toLowerCase().includes(medSearch.toLowerCase()))
+      ).slice(0, 8)
+    : [];
+
   return (
     <>
       {/* ── Adherence card ── */}
@@ -2156,28 +2164,22 @@ function PaneMeds({ meds, setMeds, toast }) {
               }}
               onFocus={() => { if (medSearch.length >= 1) setShowSuggestions(true); }}
             />
-            {showSuggestions && (() => {
-              const q = medSearch.toLowerCase();
-              const hits = MED_DB.filter(m =>
-                m.name.toLowerCase().includes(q) ||
-                (m.brand && m.brand.toLowerCase().includes(q))
-              ).slice(0, 7);
-              return hits.length > 0 ? (
-                <div className="med-suggest-list">
-                  {hits.map(m => (
-                    <button key={m.name} className="med-suggest-item" onMouseDown={e => e.preventDefault()} onClick={() => {
+            {medSuggestions.length > 0 && (
+              <div className="med-suggest-list">
+                {medSuggestions.map(m => (
+                  <button key={m.name} className="med-suggest-item"
+                    onPointerDown={() => {
                       setMedSearch(m.name);
                       setNewMed(n => ({...n, name: m.name, purpose: n.purpose || m.purpose || ""}));
                       setSelectedMedInfo(m);
                       setShowSuggestions(false);
                     }}>
-                      <span className="msi-name">{m.name}{m.brand ? <span className="muted regular" style={{fontWeight:400}}> · {m.brand}</span> : ""}</span>
-                      <span className="msi-meta">{m.cat}{m.purpose ? " · " + m.purpose.slice(0,50) : ""}</span>
-                    </button>
-                  ))}
-                </div>
-              ) : null;
-            })()}
+                    <span className="msi-name">{m.name}{m.brand ? " · " + m.brand : ""}</span>
+                    <span className="msi-meta">{m.cat}</span>
+                  </button>
+                ))}
+              </div>
+            )}
           </div>
 
           {/* Dose with chips */}
