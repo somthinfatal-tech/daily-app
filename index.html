@@ -2463,6 +2463,7 @@ function Onboarding({ onComplete, defaultName }) {
   const [step, setStep] = useState_O(0);
   const [data, setData] = useState_O({
     name: defaultName || "",
+    email: "",
     pronouns: "",
     ageRange: "",
     reasons: [],
@@ -2480,7 +2481,7 @@ function Onboarding({ onComplete, defaultName }) {
 
   const STEPS = [
     { id: "welcome",  next: "Begin" },
-    { id: "name",     next: "Continue", canNext: () => !!data.name.trim() },
+    { id: "name",     next: "Continue", canNext: () => !!data.name.trim() && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(data.email.trim()) },
     { id: "reasons",  next: "Continue", canNext: () => data.reasons.length > 0 },
     { id: "care",     next: "Continue" },
     { id: "reminders",next: "Continue" },
@@ -2555,6 +2556,8 @@ function StepWelcome() {
 }
 
 function StepName({ data, set }) {
+  const emailValid = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(data.email.trim());
+  const emailDirty = data.email.length > 0;
   return (
     <div className="step">
       <h2 className="serif step-title">First — what should we call you?</h2>
@@ -2566,7 +2569,19 @@ function StepName({ data, set }) {
         onChange={e => set("name", e.target.value)}
         autoFocus
       />
-      <label className="form-l caps xsmall muted">Pronouns (optional)</label>
+      <label className="form-l caps xsmall muted" style={{marginTop: 16}}>Email address</label>
+      <input
+        className="text-input"
+        type="email"
+        placeholder="you@example.com"
+        value={data.email}
+        onChange={e => set("email", e.target.value)}
+        style={emailDirty && !emailValid ? { borderColor: "var(--err, #C0392B)" } : {}}
+      />
+      {emailDirty && !emailValid && (
+        <p className="xsmall" style={{color:"var(--err, #C0392B)", marginTop: 4}}>Please enter a valid email address.</p>
+      )}
+      <label className="form-l caps xsmall muted" style={{marginTop: 16}}>Pronouns (optional)</label>
       <div className="seg inline">
         {["she/her","he/him","they/them","other"].map(p => (
           <button key={p} className={`seg-btn ${data.pronouns===p?"active":""}`} onClick={() => set("pronouns", p)}>{p}</button>
@@ -2701,6 +2716,7 @@ function StepReady({ data }) {
       <h2 className="serif step-title">All set, {data.name.split(" ")[0]}.</h2>
       <p className="muted step-sub">You'll see your Today screen with a gentle check-in at {formatTime(data.checkinTime)}.</p>
       <div className="ready-summary">
+        <div className="rs-row"><span className="rs-l">Account</span><span className="rs-v">{data.email}</span></div>
         <div className="rs-row"><span className="rs-l">Checking in for</span><span className="rs-v">{reasons.length ? reasons.map(r => r[0].toUpperCase() + r.slice(1)).join(" · ") : "general wellbeing"}</span></div>
         <div className="rs-row"><span className="rs-l">Daily prompt</span><span className="rs-v">{formatTime(data.checkinTime)}</span></div>
         {data.therapist && <div className="rs-row"><span className="rs-l">Care team</span><span className="rs-v">{data.therapist}</span></div>}
@@ -3291,27 +3307,13 @@ function App() {
     adaptive: true,
   });
 
-  const [meds, setMeds] = useState_A([
-    { id: 1, name: "Sertraline",  dose: "50mg", time: "8:00 AM", note: "with breakfast", taken: true,  takenAt: "8:12 AM" },
-    { id: 2, name: "Propranolol", dose: "10mg", time: "12:00 PM", note: "as needed",     taken: false },
-    { id: 3, name: "Sertraline",  dose: "50mg", time: "8:00 PM", note: "with dinner",    taken: false },
-  ]);
+  const [meds, setMeds] = useState_A([]);
 
-  const [mood, setMood] = useState_A({ id: "good", label: "Good", color: "#7AA68B", t: Date.now() - 3600e3 });
+  const [mood, setMood] = useState_A(null);
 
-  const [symptoms, setSymptoms] = useState_A([
-    { id: 1, name: "Anxiety",            time: "11:30 AM", note: "before standup", sev: 6 },
-    { id: 2, name: "Brain fog",          time: "9:45 AM",  note: "couldn't focus", sev: 4 },
-    { id: 3, name: "Tight chest",        time: "8:20 AM",  note: "after the email", sev: 5 },
-  ]);
+  const [symptoms, setSymptoms] = useState_A([]);
 
-  const [entries, setEntries] = useState_A([
-    { id: 1001, kind: "mood", label: "Hopeful", color: "#D7A65C", intensity: 6, note: "Sun on my face this morning. Brief but real.", tags: ["alone"], t: Date.now() - 4*3600e3 },
-    { id: 1002, kind: "note", text: "Started the day anxious about the meeting. Did box breathing for 4 min and it actually helped a little. I want to remember that.", t: Date.now() - 6*3600e3 },
-    { id: 1003, kind: "mood", label: "Worried", color: "#9C7BA7", intensity: 7, note: "Email from Mom landed in the worst possible way.", tags: ["family"], t: Date.now() - 8*3600e3 },
-    { id: 1004, kind: "mood", label: "Steady",  color: "#7AA68B", intensity: 5, note: "", tags: [], t: Date.now() - 26*3600e3 },
-    { id: 1005, kind: "note", text: "Therapy moved us toward thinking about needs versus wants. Made me uncomfortable in a useful way.", t: Date.now() - 30*3600e3 },
-  ]);
+  const [entries, setEntries] = useState_A([]);
 
   const [toast, setToastT] = useToast();
   const undoLast = (t) => {
