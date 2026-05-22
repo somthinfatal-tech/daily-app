@@ -1073,6 +1073,71 @@ body[data-radius="Sharp"] { --r: 6px; }
   .tweaks-panel { right: 8px; left: 8px; width: auto; }
 }
 
+/* ====== Activity Log ====== */
+.activity-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; padding: 0 var(--pad); margin-bottom: 4px; }
+.act-card { background: var(--surface); border-radius: var(--r); padding: 12px; display: flex; flex-direction: column; gap: 6px; }
+.act-label { font-size: 10px; text-transform: uppercase; letter-spacing: .06em; color: var(--muted); }
+.act-value { font-size: 22px; font-weight: 700; color: var(--text); line-height: 1; }
+.act-unit { font-size: 11px; color: var(--muted); margin-left: 2px; }
+.act-stepper { display: flex; align-items: center; gap: 10px; margin-top: 2px; }
+.act-step-btn { width: 26px; height: 26px; border-radius: 50%; background: var(--accent-soft); color: var(--accent); border: none; cursor: pointer; font-size: 16px; font-weight: 600; display: flex; align-items: center; justify-content: center; }
+.act-step-btn:active { opacity: .7; }
+.act-level-row { display: flex; gap: 4px; margin-top: 4px; }
+.act-dot { width: 18px; height: 6px; border-radius: 3px; background: var(--line); cursor: pointer; transition: background .15s; }
+.act-dot.on { background: var(--accent); }
+.act-dot.on.hi { background: #C0392B; }
+.act-full-row { padding: 0 var(--pad); margin-bottom: 4px; }
+.act-bool-row { display: flex; justify-content: space-between; align-items: center; background: var(--surface); border-radius: var(--r); padding: 12px; }
+
+/* ====== Side Effect Presets ====== */
+.se-grid { display: flex; flex-wrap: wrap; gap: 6px; padding: 8px var(--pad); }
+.se-tag { padding: 6px 11px; border-radius: 20px; font-size: 12px; background: var(--surface); color: var(--text); border: 1px solid var(--line); cursor: pointer; transition: all .15s; }
+.se-tag.on { background: var(--accent-soft); color: var(--accent); border-color: var(--accent); }
+
+/* ====== Report Screen ====== */
+.report-range-row { display: flex; gap: 6px; padding: 0 var(--pad) 8px; flex-wrap: wrap; }
+.rr-btn { padding: 6px 13px; border-radius: 20px; font-size: 12px; font-weight: 500; background: var(--surface); color: var(--text); border: 1px solid var(--line); cursor: pointer; transition: all .15s; }
+.rr-btn.on { background: var(--accent); color: var(--accent-ink); border-color: var(--accent); }
+.report-stat-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; padding: 0 var(--pad); margin-bottom: 8px; }
+.report-stat { background: var(--surface); border-radius: var(--r); padding: 12px 8px; text-align: center; }
+.report-stat-val { font-size: 22px; font-weight: 700; color: var(--text); }
+.report-stat-label { font-size: 10px; text-transform: uppercase; letter-spacing: .05em; color: var(--muted); margin-top: 2px; }
+.report-table { width: 100%; border-collapse: collapse; font-size: 12px; }
+.report-table th { text-align: left; font-size: 10px; text-transform: uppercase; letter-spacing: .05em; color: var(--muted); padding: 5px 0; border-bottom: 1px solid var(--line); }
+.report-table td { padding: 7px 4px 7px 0; border-bottom: 1px solid var(--line); color: var(--text); vertical-align: top; }
+.report-table td:last-child { text-align: right; color: var(--muted); }
+.adhere-bar { height: 4px; background: var(--line); border-radius: 2px; margin-top: 4px; min-width: 60px; }
+.adhere-fill { height: 100%; border-radius: 2px; }
+.report-empty { color: var(--muted); font-size: 12px; font-style: italic; padding: 10px 0; }
+.report-actions { display: flex; gap: 8px; padding: var(--pad); }
+.report-actions .btn { flex: 1; font-size: 13px; }
+.report-patient-card { background: var(--accent-soft); border-radius: var(--r); padding: 14px var(--pad); margin: 0 var(--pad) 8px; }
+.rpc-name { font-size: 18px; font-weight: 700; color: var(--text); }
+.rpc-meta { font-size: 12px; color: var(--muted); margin-top: 3px; }
+.rpc-range { font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: .05em; color: var(--accent); margin-top: 6px; }
+.se-entry { font-size: 11px; color: var(--muted); margin-top: 2px; }
+.mood-trend-bars { display: flex; align-items: flex-end; gap: 3px; height: 40px; padding: 0; }
+.mtb { flex: 1; border-radius: 2px 2px 0 0; min-height: 3px; background: var(--accent); opacity: .7; }
+.custom-range-row { display: flex; gap: 8px; padding: 0 var(--pad) 8px; align-items: center; }
+.custom-range-row input[type="date"] { flex: 1; background: var(--surface); border: 1px solid var(--line); border-radius: var(--r); padding: 8px 10px; font-family: inherit; font-size: 13px; color: var(--text); }
+
+/* ====== Print ====== */
+@media print {
+  .ambient, .tweaks-panel, .tweaks-fab, .bnav, .notch, .status-bar,
+  .report-actions, .report-range-row, .custom-range-row, [data-no-print] { display: none !important; }
+  body { background: #fff; color: #000; font-size: 12px; }
+  .phone-wrap { padding: 0; min-height: auto; display: block; }
+  .phone { width: 100%; height: auto; border-radius: 0; box-shadow: none; max-width: none; }
+  .screen { overflow: visible; height: auto; }
+  .scroll { overflow: visible; height: auto; padding-bottom: 0; }
+  .view-stack { overflow: visible; height: auto; }
+  .card { border: 1px solid #ddd !important; box-shadow: none !important; break-inside: avoid; }
+  .report-stat { border: 1px solid #ddd; }
+  .report-stat-val { font-size: 18px; }
+  .report-patient-card { background: #f5f5f5 !important; border: 1px solid #ccc; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+  .adhere-fill { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+}
+
 </style>
 </head>
 <body>
@@ -1764,19 +1829,20 @@ Object.assign(window, { ScreenToday, ScreenMood });
 /* Daily v2 — Care screen (Meds, Symptoms, Toolkit) */
 const { useState: useState_C, useEffect: useEffect_C } = React;
 
-function ScreenCare({ go, meds, setMeds, symptoms, setSymptoms, toast, initialTab = "Meds", initialFocus = null }) {
+function ScreenCare({ go, meds, setMeds, symptoms, setSymptoms, activities, setActivities, toast, initialTab = "Meds", initialFocus = null }) {
   const [tab, setTab] = useState_C(initialTab);
   useEffect_C(() => { setTab(initialTab); }, [initialTab]);
   return (
     <div className="scroll" data-screen-label="Care">
       <PageHeader title="Care" onBack={() => go("today")}/>
       <div className="seg">
-        {["Meds","Symptoms","Toolkit"].map(t => (
+        {["Meds","Symptoms","Activity","Toolkit"].map(t => (
           <button key={t} className={`seg-btn ${tab===t?"active":""}`} onClick={() => setTab(t)}>{t}</button>
         ))}
       </div>
       {tab === "Meds"     && <PaneMeds meds={meds} setMeds={setMeds} toast={toast}/>}
-      {tab === "Symptoms" && <PaneSymptoms items={symptoms} setItems={setSymptoms} toast={toast}/>}
+      {tab === "Symptoms" && <PaneSymptoms items={symptoms} setItems={setSymptoms} meds={meds} toast={toast}/>}
+      {tab === "Activity" && <PaneActivity activities={activities} setActivities={setActivities} toast={toast}/>}
       {tab === "Toolkit"  && <PaneToolkit focus={initialFocus}/>}
     </div>
   );
@@ -1978,44 +2044,86 @@ function PaneMeds({ meds, setMeds, toast }) {
 }
 
 /* ===== Symptoms ===== */
-function PaneSymptoms({ items, setItems, toast }) {
+function PaneSymptoms({ items, setItems, meds, toast }) {
   const [adding, setAdding] = useState_C(false);
-  const [newSym, setNewSym] = useState_C({ name: "", sev: 5, note: "" });
+  const [newSym, setNewSym] = useState_C({ name: "", sev: 5, note: "", kind: "symptom", linkedMed: "", selectedPresets: [], otherText: "" });
+  const [activeTab, setActiveTab] = useState_C("symptoms");
 
-  const QUICK = ["Anxiety","Panic","Brain fog","Intrusive thoughts","Low motivation","Restless","Irritable","Couldn't sleep"];
+  const QUICK_SYMPTOMS = ["Anxiety","Panic","Brain fog","Intrusive thoughts","Low motivation","Restless","Irritable","Couldn't sleep"];
+  const SIDE_EFFECT_PRESETS = ["Nausea","Headache","Fatigue","Dizziness","Dry mouth","Insomnia","Drowsiness","Weight change","Appetite change","Mood swings","Anxiety increase","Brain fog","Tremors","Sweating","Heart racing","Blurred vision","Stomach pain","Constipation","Low libido","Other"];
 
   const adjust = (id, delta) => {
     setItems(items.map(s => s.id === id ? {...s, sev: Math.max(1, Math.min(10, s.sev + delta))} : s));
   };
 
   const addQuick = (name) => {
-    setItems([{ id: Date.now(), name, sev: 5, note: "", time: new Date().toLocaleTimeString([], {hour:"numeric",minute:"2-digit"}) }, ...items]);
+    setItems([{ id: Date.now(), name, sev: 5, note: "", kind: "symptom", time: new Date().toLocaleTimeString([], {hour:"numeric",minute:"2-digit"}), t: Date.now() }, ...items]);
     toast({ msg: `Logged: ${name}`, undo: true });
   };
 
+  const saveSideEffects = () => {
+    const names = [...newSym.selectedPresets.filter(p => p !== "Other")];
+    if (newSym.selectedPresets.includes("Other") && newSym.otherText.trim()) names.push(newSym.otherText.trim());
+    if (!names.length) return;
+    const now = new Date().toLocaleTimeString([], {hour:"numeric",minute:"2-digit"});
+    const newItems = names.map(name => ({ id: Date.now() + Math.random(), name, sev: newSym.sev, note: newSym.linkedMed ? `linked to ${newSym.linkedMed}` : newSym.note, kind: "side-effect", linkedMed: newSym.linkedMed, time: now, t: Date.now() }));
+    setItems([...newItems, ...items]);
+    setAdding(false);
+    setNewSym({ name:"", sev:5, note:"", kind:"symptom", linkedMed:"", selectedPresets:[], otherText:"" });
+    toast({ msg: `Logged ${names.length} side effect${names.length>1?"s":""}` });
+  };
+
+  const displayItems = activeTab === "side-effects"
+    ? items.filter(i => i.kind === "side-effect")
+    : items.filter(i => i.kind !== "side-effect");
+
   return (
     <>
-      <div className="padded-x muted small mood-prompt">
-        How is your body and mind today? Drag the bar to adjust intensity.
+      <div className="seg padded-x" style={{margin:"8px var(--pad)"}}>
+        <button className={`seg-btn ${activeTab==="symptoms"?"active":""}`} onClick={() => setActiveTab("symptoms")}>Symptoms</button>
+        <button className={`seg-btn ${activeTab==="side-effects"?"active":""}`} onClick={() => setActiveTab("side-effects")}>Side Effects</button>
       </div>
 
-      <SectionLabel>Quick log</SectionLabel>
-      <div className="quick-tags padded-x">
-        {QUICK.map(q => (
-          <button key={q} className="qtag" onClick={() => addQuick(q)}>+ {q}</button>
-        ))}
-      </div>
-
-      <SectionLabel>Today</SectionLabel>
-      {items.length === 0 && (
-        <div className="empty">Nothing logged yet today. Use the quick chips above, or tap + for detail.</div>
+      {activeTab === "symptoms" && (
+        <>
+          <div className="padded-x muted small mood-prompt">How is your body and mind today?</div>
+          <SectionLabel>Quick log</SectionLabel>
+          <div className="quick-tags padded-x">
+            {QUICK_SYMPTOMS.map(q => (
+              <button key={q} className="qtag" onClick={() => addQuick(q)}>+ {q}</button>
+            ))}
+          </div>
+        </>
       )}
-      {items.map(it => (
+
+      {activeTab === "side-effects" && (
+        <>
+          <div className="padded-x muted small mood-prompt">Track medication side effects to share with your doctor.</div>
+          <SectionLabel>Preset side effects</SectionLabel>
+          <div className="se-grid">
+            {SIDE_EFFECT_PRESETS.slice(0,12).map(p => (
+              <button key={p} className="se-tag" onClick={() => {
+                const sel = [p];
+                const sev = 5;
+                const now = new Date().toLocaleTimeString([], {hour:"numeric",minute:"2-digit"});
+                setItems([{ id: Date.now(), name: p, sev, note: "", kind: "side-effect", linkedMed: "", time: now, t: Date.now() }, ...items]);
+                toast({ msg: `Logged: ${p}` });
+              }}>+ {p}</button>
+            ))}
+          </div>
+        </>
+      )}
+
+      <SectionLabel>Today{displayItems.length > 0 ? ` · ${displayItems.length}` : ""}</SectionLabel>
+      {displayItems.length === 0 && (
+        <div className="empty">Nothing logged yet. {activeTab === "symptoms" ? "Use the quick chips above or tap + for detail." : "Tap a preset above or use + for detail."}</div>
+      )}
+      {displayItems.map(it => (
         <Card key={it.id} className="symp">
           <div className="row between">
             <div className="symp-meta">
-              <div className="med-name">{it.name}</div>
-              <div className="muted xsmall">{it.time}{it.note ? ` · "${it.note}"` : ""}</div>
+              <div className="med-name">{it.name}{it.kind==="side-effect" && <span className="xsmall muted" style={{marginLeft:6,fontWeight:400}}>side effect</span>}</div>
+              <div className="muted xsmall">{it.time}{it.linkedMed ? ` · ${it.linkedMed}` : ""}{it.note && !it.linkedMed ? ` · "${it.note}"` : ""}</div>
             </div>
             <div className="sev-controls">
               <button className="sev-btn" onClick={() => adjust(it.id, -1)} aria-label="Less">−</button>
@@ -2034,27 +2142,171 @@ function PaneSymptoms({ items, setItems, toast }) {
       ))}
 
       <div className="block padded">
-        <button className="btn primary" onClick={() => setAdding(true)}>
+        <button className="btn primary" onClick={() => { setNewSym(n => ({...n, kind: activeTab==="side-effects"?"side-effect":"symptom", selectedPresets:[]})); setAdding(true); }}>
           <IconPlus size={14}/> Detailed log
         </button>
       </div>
 
-      <Sheet open={adding} onClose={() => setAdding(false)} title="Log a symptom">
+      <Sheet open={adding} onClose={() => { setAdding(false); setNewSym({ name:"", sev:5, note:"", kind:"symptom", linkedMed:"", selectedPresets:[], otherText:"" }); }}
+        title={newSym.kind==="side-effect" ? "Log side effects" : "Log a symptom"}>
         <div className="form">
-          <label className="form-l caps xsmall muted">Name</label>
-          <input value={newSym.name} onChange={e => setNewSym({...newSym, name: e.target.value})} placeholder="e.g. Tight chest" className="text-input"/>
-          <label className="form-l caps xsmall muted">Severity · {newSym.sev}/10</label>
-          <input type="range" min={1} max={10} value={newSym.sev} onChange={e => setNewSym({...newSym, sev:+e.target.value})} className="slider"
-            style={{"--p":`${(newSym.sev-1)/9*100}%`,"--c":"var(--accent)"}}/>
-          <label className="form-l caps xsmall muted">Notes</label>
-          <textarea value={newSym.note} onChange={e => setNewSym({...newSym, note: e.target.value})} placeholder="What does it feel like?" rows={3} className="text-area"/>
-          <button className="btn primary" disabled={!newSym.name} onClick={() => {
-            setItems([{ id: Date.now(), ...newSym, time: new Date().toLocaleTimeString([], {hour:"numeric",minute:"2-digit"}) }, ...items]);
-            setAdding(false); setNewSym({ name:"", sev:5, note:"" });
-            toast({ msg: `Logged: ${newSym.name}`, undo: true });
-          }}><IconCheck size={14}/> Save</button>
+          {newSym.kind === "side-effect" ? (
+            <>
+              <label className="form-l caps xsmall muted">Select all that apply</label>
+              <div className="se-grid" style={{paddingLeft:0,paddingRight:0}}>
+                {SIDE_EFFECT_PRESETS.map(p => {
+                  const on = newSym.selectedPresets.includes(p);
+                  return (
+                    <button key={p} className={`se-tag ${on?"on":""}`}
+                      onClick={() => setNewSym(n => ({...n, selectedPresets: on ? n.selectedPresets.filter(x=>x!==p) : [...n.selectedPresets, p]}))}>
+                      {p}
+                    </button>
+                  );
+                })}
+              </div>
+              {newSym.selectedPresets.includes("Other") && (
+                <>
+                  <label className="form-l caps xsmall muted" style={{marginTop:8}}>Describe other</label>
+                  <input value={newSym.otherText} onChange={e => setNewSym(n=>({...n,otherText:e.target.value}))} placeholder="Describe the side effect" className="text-input"/>
+                </>
+              )}
+              <label className="form-l caps xsmall muted" style={{marginTop:8}}>Severity · {newSym.sev}/10</label>
+              <input type="range" min={1} max={10} value={newSym.sev} onChange={e => setNewSym(n=>({...n,sev:+e.target.value}))} className="slider"
+                style={{"--p":`${(newSym.sev-1)/9*100}%`,"--c":"var(--accent)"}}/>
+              <label className="form-l caps xsmall muted">Linked medication (optional)</label>
+              <select value={newSym.linkedMed} onChange={e=>setNewSym(n=>({...n,linkedMed:e.target.value}))} className="text-input" style={{appearance:"auto"}}>
+                <option value="">— none —</option>
+                {[...new Map(meds.map(m=>[m.name,m])).values()].map(m => (
+                  <option key={m.id} value={`${m.name} ${m.dose}`}>{m.name} {m.dose}</option>
+                ))}
+              </select>
+              <button className="btn primary" disabled={!newSym.selectedPresets.length} onClick={saveSideEffects}><IconCheck size={14}/> Save</button>
+            </>
+          ) : (
+            <>
+              <label className="form-l caps xsmall muted">Name</label>
+              <input value={newSym.name} onChange={e => setNewSym(n=>({...n,name:e.target.value}))} placeholder="e.g. Tight chest" className="text-input"/>
+              <label className="form-l caps xsmall muted">Severity · {newSym.sev}/10</label>
+              <input type="range" min={1} max={10} value={newSym.sev} onChange={e => setNewSym(n=>({...n,sev:+e.target.value}))} className="slider"
+                style={{"--p":`${(newSym.sev-1)/9*100}%`,"--c":"var(--accent)"}}/>
+              <label className="form-l caps xsmall muted">Notes</label>
+              <textarea value={newSym.note} onChange={e => setNewSym(n=>({...n,note:e.target.value}))} placeholder="What does it feel like?" rows={3} className="text-area"/>
+              <button className="btn primary" disabled={!newSym.name} onClick={() => {
+                setItems([{ id: Date.now(), ...newSym, kind:"symptom", time: new Date().toLocaleTimeString([], {hour:"numeric",minute:"2-digit"}), t: Date.now() }, ...items]);
+                setAdding(false); setNewSym({ name:"", sev:5, note:"", kind:"symptom", linkedMed:"", selectedPresets:[], otherText:"" });
+                toast({ msg: `Logged: ${newSym.name}`, undo: true });
+              }}><IconCheck size={14}/> Save</button>
+            </>
+          )}
         </div>
       </Sheet>
+    </>
+  );
+}
+
+/* ===== Activity Log ===== */
+function PaneActivity({ activities, setActivities, toast }) {
+  const todayKey = new Date().toDateString();
+  const todayLog = activities.find(a => new Date(a.t).toDateString() === todayKey) || null;
+  const [log, setLog] = useState_C(todayLog || { sleep: 7, exercise: 0, stress: 3, social: 3, appetite: 3, caffeine: false, alcohol: false, note: "" });
+  const [saved, setSaved] = useState_C(!!todayLog);
+
+  const setVal = (k, v) => { setLog(l => ({...l, [k]: v})); setSaved(false); };
+
+  const saveLog = () => {
+    const entry = { ...log, id: todayLog?.id || Date.now(), t: Date.now(), date: todayKey };
+    setActivities(prev => [entry, ...prev.filter(a => new Date(a.t).toDateString() !== todayKey)]);
+    setSaved(true);
+    toast({ msg: "Activity logged" });
+  };
+
+  const LevelDots = ({ val, max, onChange, danger }) => (
+    <div className="act-level-row">
+      {Array.from({length: max}, (_, i) => (
+        <div key={i} className={`act-dot ${i < val ? "on" : ""} ${danger && i >= 3 && i < val ? "hi" : ""}`}
+          onClick={() => onChange(i + 1)}/>
+      ))}
+    </div>
+  );
+
+  return (
+    <>
+      <div className="padded-x muted small mood-prompt" style={{padding:"8px var(--pad)"}}>
+        Log today's activities — this data helps your doctor understand patterns alongside your mood and medications.
+      </div>
+
+      <SectionLabel>Sleep & Exercise</SectionLabel>
+      <div className="activity-grid">
+        <div className="act-card">
+          <div className="act-label">Sleep</div>
+          <div className="act-stepper">
+            <button className="act-step-btn" onClick={() => setVal("sleep", Math.max(0, log.sleep - 0.5))}>−</button>
+            <div><span className="act-value">{log.sleep}</span><span className="act-unit">hrs</span></div>
+            <button className="act-step-btn" onClick={() => setVal("sleep", Math.min(14, log.sleep + 0.5))}>+</button>
+          </div>
+        </div>
+        <div className="act-card">
+          <div className="act-label">Exercise</div>
+          <div className="act-stepper">
+            <button className="act-step-btn" onClick={() => setVal("exercise", Math.max(0, log.exercise - 15))}>−</button>
+            <div><span className="act-value">{log.exercise}</span><span className="act-unit">min</span></div>
+            <button className="act-step-btn" onClick={() => setVal("exercise", Math.min(300, log.exercise + 15))}>+</button>
+          </div>
+        </div>
+      </div>
+
+      <SectionLabel>Levels (tap to set)</SectionLabel>
+      <div className="activity-grid">
+        <div className="act-card">
+          <div className="act-label">Stress</div>
+          <div className="act-value" style={{fontSize:16}}>{["None","Very low","Low","Moderate","High","Very high"][Math.min(5,log.stress)]}</div>
+          <LevelDots val={log.stress} max={5} danger onChange={v => setVal("stress", v)}/>
+        </div>
+        <div className="act-card">
+          <div className="act-label">Social activity</div>
+          <div className="act-value" style={{fontSize:16}}>{["None","Minimal","Some","Moderate","Active","Very active"][Math.min(5,log.social)]}</div>
+          <LevelDots val={log.social} max={5} onChange={v => setVal("social", v)}/>
+        </div>
+      </div>
+      <div className="activity-grid">
+        <div className="act-card">
+          <div className="act-label">Appetite</div>
+          <div className="act-value" style={{fontSize:16}}>{["None","Poor","Low","Normal","Good","Great"][Math.min(5,log.appetite)]}</div>
+          <LevelDots val={log.appetite} max={5} onChange={v => setVal("appetite", v)}/>
+        </div>
+        <div className="act-card" style={{justifyContent:"space-between"}}>
+          <div className="act-label">Substances</div>
+          <button className={`se-tag ${log.caffeine?"on":""}`} style={{marginBottom:4}} onClick={() => setVal("caffeine", !log.caffeine)}>☕ Caffeine</button>
+          <button className={`se-tag ${log.alcohol?"on":""}`} onClick={() => setVal("alcohol", !log.alcohol)}>🍷 Alcohol</button>
+        </div>
+      </div>
+
+      <SectionLabel>Notes (optional)</SectionLabel>
+      <div className="padded-x" style={{paddingBottom:8}}>
+        <textarea value={log.note} onChange={e => setVal("note", e.target.value)}
+          placeholder="Anything else worth noting today…" rows={3} className="text-area"/>
+      </div>
+
+      <div className="block padded">
+        <button className="btn primary" onClick={saveLog}>
+          {saved ? <><IconCheck size={14}/> Saved</> : <><IconCheck size={14}/> Save today's log</>}
+        </button>
+      </div>
+
+      {activities.length > 1 && (
+        <>
+          <SectionLabel>Recent</SectionLabel>
+          {activities.slice(0, 5).map(a => (
+            <Card key={a.id} className="symp">
+              <div className="row between">
+                <div className="med-name">{new Date(a.t).toLocaleDateString([], {weekday:"short",month:"short",day:"numeric"})}</div>
+                <div className="muted xsmall">{a.sleep}h sleep · {a.exercise}min exercise</div>
+              </div>
+              <div className="muted xsmall" style={{marginTop:2}}>Stress {a.stress}/5 · Social {a.social}/5 · Appetite {a.appetite}/5{a.caffeine?" · caffeine":""}{a.alcohol?" · alcohol":""}</div>
+            </Card>
+          ))}
+        </>
+      )}
     </>
   );
 }
@@ -2378,9 +2630,12 @@ function ScreenInsights({ go }) {
         </Card>
       ))}
 
-      <div className="block padded">
-        <button className="btn primary" onClick={() => setSharing(true)}>
-          <IconShareTherapist size={16}/> Share with my therapist
+      <div className="block padded" style={{display:"flex",gap:8}}>
+        <button className="btn primary" style={{flex:2}} onClick={() => go("report")}>
+          <IconShareTherapist size={16}/> Prepare Doctor's Report
+        </button>
+        <button className="btn" style={{flex:1,background:"var(--surface)",border:"1px solid var(--line)"}} onClick={() => setSharing(true)}>
+          <IconShare size={14}/> Share
         </button>
       </div>
 
@@ -3221,6 +3476,327 @@ Object.assign(window, { ScreenSettings, ScreenHistory });
 
 </script>
 <script type="text/babel">
+/* Daily v2 — Doctor Report */
+const { useState: useState_R, useRef: useRef_R } = React;
+
+function ScreenReport({ go, entries, meds, symptoms, activities, profile }) {
+  const [range, setRange] = useState_R(14);
+  const [customStart, setCustomStart] = useState_R("");
+  const [customEnd, setCustomEnd] = useState_R("");
+
+  const now = Date.now();
+  const cutoff = range === "custom"
+    ? (customStart ? new Date(customStart).getTime() : now - 14*86400000)
+    : now - range * 86400000;
+  const endT = range === "custom"
+    ? (customEnd ? new Date(customEnd + "T23:59:59").getTime() : now)
+    : now;
+
+  const inRange = t => t >= cutoff && t <= endT;
+  const rangeEntries   = entries.filter(e => inRange(e.t));
+  const rangeSymptoms  = symptoms.filter(s => inRange(s.t || Date.now()));
+  const rangeActivities= activities.filter(a => inRange(a.t));
+  const moodEntries    = rangeEntries.filter(e => e.kind === "mood");
+  const noteEntries    = rangeEntries.filter(e => e.kind === "note");
+  const sideEffects    = rangeSymptoms.filter(s => s.kind === "side-effect");
+  const generalSymptoms= rangeSymptoms.filter(s => s.kind !== "side-effect");
+
+  const avgMood = moodEntries.length
+    ? (moodEntries.reduce((s,e) => s+(e.intensity||5),0)/moodEntries.length).toFixed(1) : "—";
+
+  const avgSleep = rangeActivities.length
+    ? (rangeActivities.reduce((s,a)=>s+(a.sleep||0),0)/rangeActivities.length).toFixed(1) : "—";
+
+  const exerciseDays = rangeActivities.filter(a => a.exercise > 0).length;
+
+  const medProfiles = [...new Map(meds.map(m => [`${m.name}|${m.dose}`, m])).values()];
+
+  const dateLabel = range === "custom"
+    ? `${customStart || "?"} – ${customEnd || "today"}`
+    : `Last ${range} days`;
+
+  const genDate = new Date().toLocaleDateString([], {year:"numeric",month:"long",day:"numeric"});
+
+  const printReport = () => window.print();
+
+  const emailReport = () => {
+    const lines = [];
+    lines.push(`DAILY HEALTH REPORT`);
+    lines.push(`Patient: ${profile.name}${profile.email ? " <" + profile.email + ">" : ""}`);
+    lines.push(`Period: ${dateLabel}`);
+    lines.push(`Generated: ${genDate}\n`);
+    lines.push(`MOOD SUMMARY`);
+    lines.push(`Average mood: ${avgMood}/10  |  Entries: ${moodEntries.length}`);
+    if (moodEntries.length) {
+      const counts = {};
+      moodEntries.forEach(e => { counts[e.label] = (counts[e.label]||0)+1; });
+      lines.push(`Most frequent: ${Object.entries(counts).sort((a,b)=>b[1]-a[1]).slice(0,3).map(([l,c])=>`${l} (${c}x)`).join(", ")}`);
+    }
+    lines.push(`\nMEDICATION ADHERENCE`);
+    if (medProfiles.length) {
+      medProfiles.forEach(m => {
+        const taken = meds.filter(d => d.name===m.name && d.dose===m.dose && d.taken).length;
+        const total = meds.filter(d => d.name===m.name && d.dose===m.dose).length;
+        const pct = total ? Math.round(taken/total*100) : 0;
+        lines.push(`${m.name} ${m.dose}: ${pct}% adherence (${taken}/${total} doses taken)`);
+      });
+    } else { lines.push("No medications on record."); }
+    lines.push(`\nSIDE EFFECTS (${sideEffects.length} logged)`);
+    if (sideEffects.length) {
+      const seCounts = {};
+      sideEffects.forEach(s => { seCounts[s.name] = (seCounts[s.name]||0)+1; });
+      Object.entries(seCounts).sort((a,b)=>b[1]-a[1]).forEach(([n,c]) => lines.push(`• ${n}: ${c}x (avg sev ${(sideEffects.filter(s=>s.name===n).reduce((t,s)=>t+s.sev,0)/c).toFixed(1)}/10)`));
+    }
+    lines.push(`\nSYMPTOMS (${generalSymptoms.length} logged)`);
+    if (generalSymptoms.length) {
+      const symCounts = {};
+      generalSymptoms.forEach(s => { symCounts[s.name] = (symCounts[s.name]||0)+1; });
+      Object.entries(symCounts).sort((a,b)=>b[1]-a[1]).forEach(([n,c]) => lines.push(`• ${n}: ${c}x`));
+    }
+    lines.push(`\nACTIVITY`);
+    lines.push(`Avg sleep: ${avgSleep} hrs  |  Exercise days: ${exerciseDays}/${rangeActivities.length}`);
+    if (rangeActivities.length) {
+      const avgStress = (rangeActivities.reduce((s,a)=>s+(a.stress||0),0)/rangeActivities.length).toFixed(1);
+      lines.push(`Avg stress: ${avgStress}/5`);
+    }
+    if (noteEntries.length) {
+      lines.push(`\nJOURNAL NOTES (${noteEntries.length})`);
+      noteEntries.slice(0,3).forEach(e => lines.push(`• ${new Date(e.t).toLocaleDateString()}: "${(e.text||"").slice(0,120)}${(e.text||"").length>120?"…":""}"`));
+    }
+    lines.push(`\n---\nGenerated by Daily — for your mind`);
+    const subject = encodeURIComponent(`Health Report — ${profile.name} — ${dateLabel}`);
+    const body = encodeURIComponent(lines.join("\n"));
+    const to = encodeURIComponent(profile.therapistEmail || "");
+    window.location.href = `mailto:${to}?subject=${subject}&body=${body}`;
+  };
+
+  const SECounts = {};
+  sideEffects.forEach(s => { SECounts[s.name] = { count:(SECounts[s.name]?.count||0)+1, totalSev:(SECounts[s.name]?.totalSev||0)+s.sev }; });
+  const moodCounts = {};
+  moodEntries.forEach(e => { moodCounts[e.label] = (moodCounts[e.label]||0)+1; });
+  const symCounts = {};
+  generalSymptoms.forEach(s => { symCounts[s.name] = (symCounts[s.name]||0)+1; });
+
+  return (
+    <div className="scroll report-screen" data-screen-label="Report">
+      <PageHeader title="Doctor's Report" onBack={() => go("insights")}/>
+
+      {/* Range selector */}
+      <div className="report-range-row" data-no-print>
+        {[7,14,30,90].map(d => (
+          <button key={d} className={`rr-btn ${range===d?"on":""}`} onClick={() => setRange(d)}>
+            {d === 7 ? "1 wk" : d === 14 ? "2 wks" : d === 30 ? "1 mo" : "3 mo"}
+          </button>
+        ))}
+        <button className={`rr-btn ${range==="custom"?"on":""}`} onClick={() => setRange("custom")}>Custom</button>
+      </div>
+      {range === "custom" && (
+        <div className="custom-range-row" data-no-print>
+          <input type="date" value={customStart} onChange={e=>setCustomStart(e.target.value)} max={customEnd||undefined}/>
+          <span className="muted small">to</span>
+          <input type="date" value={customEnd} onChange={e=>setCustomEnd(e.target.value)} min={customStart||undefined}/>
+        </div>
+      )}
+
+      {/* Patient card */}
+      <div className="report-patient-card">
+        <div className="rpc-name">{profile.name}</div>
+        <div className="rpc-meta">{profile.email || ""}{profile.conditions?.length ? " · " + profile.conditions.join(", ") : ""}</div>
+        <div className="rpc-range">{dateLabel} · Generated {genDate}</div>
+      </div>
+
+      {/* Summary stats */}
+      <div className="report-stat-grid">
+        <div className="report-stat">
+          <div className="report-stat-val">{avgMood}</div>
+          <div className="report-stat-label">Avg mood</div>
+        </div>
+        <div className="report-stat">
+          <div className="report-stat-val">{avgSleep}</div>
+          <div className="report-stat-label">Avg sleep</div>
+        </div>
+        <div className="report-stat">
+          <div className="report-stat-val">{sideEffects.length}</div>
+          <div className="report-stat-label">Side effects</div>
+        </div>
+      </div>
+
+      {/* Mood section */}
+      <SectionLabel>Mood — {moodEntries.length} entries</SectionLabel>
+      <Card>
+        {moodEntries.length === 0 ? (
+          <div className="report-empty">No mood entries in this period.</div>
+        ) : (
+          <>
+            <div className="mood-trend-bars" style={{marginBottom:8}}>
+              {moodEntries.slice().reverse().slice(-20).map((e,i) => (
+                <div key={i} className="mtb" style={{height:`${((e.intensity||5)/10)*100}%`, background: e.color||"var(--accent)"}}/>
+              ))}
+            </div>
+            <table className="report-table">
+              <thead><tr><th>Emotion</th><th>Count</th><th>Frequency</th></tr></thead>
+              <tbody>
+                {Object.entries(moodCounts).sort((a,b)=>b[1]-a[1]).slice(0,6).map(([label, count]) => (
+                  <tr key={label}>
+                    <td>{label}</td>
+                    <td>{count}×</td>
+                    <td>{Math.round(count/moodEntries.length*100)}%</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </>
+        )}
+      </Card>
+
+      {/* Medication adherence */}
+      <SectionLabel>Medication Adherence</SectionLabel>
+      <Card>
+        {medProfiles.length === 0 ? (
+          <div className="report-empty">No medications on record.</div>
+        ) : (
+          <table className="report-table">
+            <thead><tr><th>Medication</th><th>Dose</th><th>Adherence</th></tr></thead>
+            <tbody>
+              {medProfiles.map(m => {
+                const allDoses = meds.filter(d => d.name===m.name && d.dose===m.dose);
+                const taken = allDoses.filter(d => d.taken).length;
+                const total = allDoses.length;
+                const pct = total ? Math.round(taken/total*100) : 0;
+                const color = pct >= 80 ? "var(--positive)" : pct >= 50 ? "#D7A65C" : "#C0392B";
+                return (
+                  <tr key={m.id}>
+                    <td><div>{m.name}</div>{m.purpose&&<div className="muted xsmall">{m.purpose}</div>}</td>
+                    <td>{m.dose}</td>
+                    <td>
+                      <div style={{color, fontWeight:600}}>{total ? `${pct}%` : "—"}</div>
+                      {total > 0 && <div className="adhere-bar"><div className="adhere-fill" style={{width:`${pct}%`,background:color}}/></div>}
+                      {total > 0 && <div className="muted xsmall">{taken}/{total} doses</div>}
+                    </td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+        )}
+      </Card>
+
+      {/* Side effects */}
+      <SectionLabel>Side Effects — {sideEffects.length} logged</SectionLabel>
+      <Card>
+        {sideEffects.length === 0 ? (
+          <div className="report-empty">No side effects logged in this period.</div>
+        ) : (
+          <table className="report-table">
+            <thead><tr><th>Side Effect</th><th>Occurrences</th><th>Avg Severity</th></tr></thead>
+            <tbody>
+              {Object.entries(SECounts).sort((a,b)=>b[1].count-a[1].count).map(([name,d]) => (
+                <tr key={name}>
+                  <td>{name}</td>
+                  <td>{d.count}×</td>
+                  <td>{(d.totalSev/d.count).toFixed(1)}/10</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        )}
+      </Card>
+
+      {/* Symptoms */}
+      <SectionLabel>General Symptoms — {generalSymptoms.length} logged</SectionLabel>
+      <Card>
+        {generalSymptoms.length === 0 ? (
+          <div className="report-empty">No symptoms logged in this period.</div>
+        ) : (
+          <table className="report-table">
+            <thead><tr><th>Symptom</th><th>Occurrences</th><th>Avg Severity</th></tr></thead>
+            <tbody>
+              {Object.entries(symCounts).sort((a,b)=>b[1]-a[1]).map(([name,count]) => {
+                const entries_for = generalSymptoms.filter(s=>s.name===name);
+                const avgSev = (entries_for.reduce((t,s)=>t+s.sev,0)/count).toFixed(1);
+                return (
+                  <tr key={name}><td>{name}</td><td>{count}×</td><td>{avgSev}/10</td></tr>
+                );
+              })}
+            </tbody>
+          </table>
+        )}
+      </Card>
+
+      {/* Activity */}
+      <SectionLabel>Daily Activity — {rangeActivities.length} days logged</SectionLabel>
+      <Card>
+        {rangeActivities.length === 0 ? (
+          <div className="report-empty">No activity logs in this period.</div>
+        ) : (
+          <table className="report-table">
+            <thead><tr><th>Metric</th><th>Average</th><th>Range</th></tr></thead>
+            <tbody>
+              {[
+                { label:"Sleep (hrs)", key:"sleep", fmt: v => v.toFixed(1) },
+                { label:"Exercise (min)", key:"exercise", fmt: v => Math.round(v) },
+                { label:"Stress (1–5)", key:"stress", fmt: v => v.toFixed(1) },
+                { label:"Social (1–5)", key:"social", fmt: v => v.toFixed(1) },
+                { label:"Appetite (1–5)", key:"appetite", fmt: v => v.toFixed(1) },
+              ].map(row => {
+                const vals = rangeActivities.map(a => a[row.key]||0);
+                const avg = vals.reduce((t,v)=>t+v,0)/vals.length;
+                const mn = Math.min(...vals), mx = Math.max(...vals);
+                return (
+                  <tr key={row.label}>
+                    <td>{row.label}</td>
+                    <td>{row.fmt(avg)}</td>
+                    <td>{row.fmt(mn)} – {row.fmt(mx)}</td>
+                  </tr>
+                );
+              })}
+              <tr>
+                <td>Caffeine days</td>
+                <td>{rangeActivities.filter(a=>a.caffeine).length}</td>
+                <td>of {rangeActivities.length}</td>
+              </tr>
+              <tr>
+                <td>Alcohol days</td>
+                <td>{rangeActivities.filter(a=>a.alcohol).length}</td>
+                <td>of {rangeActivities.length}</td>
+              </tr>
+            </tbody>
+          </table>
+        )}
+      </Card>
+
+      {/* Journal notes */}
+      {noteEntries.length > 0 && (
+        <>
+          <SectionLabel>Journal Notes — {noteEntries.length} entries</SectionLabel>
+          <Card>
+            {noteEntries.slice(0,5).map(e => (
+              <div key={e.id} style={{marginBottom:10, paddingBottom:10, borderBottom:"1px solid var(--line)"}}>
+                <div className="muted xsmall" style={{marginBottom:3}}>{new Date(e.t).toLocaleDateString([],{weekday:"short",month:"short",day:"numeric"})}</div>
+                <div className="small">{(e.text||"").slice(0,200)}{(e.text||"").length>200?"…":""}</div>
+              </div>
+            ))}
+            {noteEntries.length > 5 && <div className="muted xsmall">+ {noteEntries.length-5} more entries not shown</div>}
+          </Card>
+        </>
+      )}
+
+      {/* Actions */}
+      <div className="report-actions" data-no-print>
+        <button className="btn" onClick={emailReport} style={{background:"var(--surface)", border:"1px solid var(--line)"}}>
+          <IconShare size={14}/> Email to Dr.
+        </button>
+        <button className="btn primary" onClick={printReport}>
+          <IconShareTherapist size={14}/> Save as PDF
+        </button>
+      </div>
+      <div style={{height:16}}/>
+    </div>
+  );
+}
+Object.assign(window, { ScreenReport });
+</script>
+<script type="text/babel">
 /* Daily v2 — main app */
 const { useState: useState_A, useEffect: useEffect_A } = React;
 
@@ -3287,14 +3863,14 @@ function App() {
   const [logOpen, setLogOpen] = useState_A(false);
 
   const [profile, setProfile] = useState_A({
-    name: tweaks.name || "Sarah",
-    pronouns: "she/her",
-    email: "sarah@example.com",
-    conditions: ["Anxiety","Depression"],
-    therapist: "Dr. Mira Patel",
-    therapistEmail: "mira@northbay.therapy",
-    biometricLock: true,
-    hidePreviews: true,
+    name: tweaks.name || "",
+    pronouns: "",
+    email: "",
+    conditions: [],
+    therapist: "",
+    therapistEmail: "",
+    biometricLock: false,
+    hidePreviews: false,
     analytics: false,
     crisisDetect: true,
     trustedContact: "",
@@ -3308,12 +3884,30 @@ function App() {
   });
 
   const [meds, setMeds] = useState_A([]);
-
   const [mood, setMood] = useState_A(null);
-
   const [symptoms, setSymptoms] = useState_A([]);
-
   const [entries, setEntries] = useState_A([]);
+  const [activities, setActivities] = useState_A([]);
+
+  /* ── localStorage persistence ── */
+  useEffect_A(() => {
+    try {
+      const d = JSON.parse(localStorage.getItem("daily-v2-data") || "{}");
+      if (d.meds)       setMeds(d.meds);
+      if (d.mood)       setMood(d.mood);
+      if (d.symptoms)   setSymptoms(d.symptoms);
+      if (d.entries)    setEntries(d.entries);
+      if (d.activities) setActivities(d.activities);
+      if (d.profile)    setProfile(p => ({...p, ...d.profile}));
+      if (d.reminders)  setReminders(r => ({...r, ...d.reminders}));
+    } catch(e) {}
+  }, []);
+
+  useEffect_A(() => {
+    try {
+      localStorage.setItem("daily-v2-data", JSON.stringify({ meds, mood, symptoms, entries, activities, profile, reminders }));
+    } catch(e) {}
+  }, [meds, mood, symptoms, entries, activities, profile, reminders]);
 
   const [toast, setToastT] = useToast();
   const undoLast = (t) => {
@@ -3323,10 +3917,11 @@ function App() {
 
   const screens = {
     today:    <ScreenToday name={profile.name} mood={mood} setMood={setMood} meds={meds} setMeds={setMeds} journalCount={entries.filter(e=>e.kind==="note").length} breathingMin={4} go={go} toast={setToastT} openLog={() => setLogOpen(true)} openSettings={() => go("settings")}/>,
-    care:     <ScreenCare go={go} meds={meds} setMeds={setMeds} symptoms={symptoms} setSymptoms={setSymptoms} toast={setToastT} initialTab={viewProps.tab || "Meds"} initialFocus={viewProps.focus}/>,
+    care:     <ScreenCare go={go} meds={meds} setMeds={setMeds} symptoms={symptoms} setSymptoms={setSymptoms} activities={activities} setActivities={setActivities} toast={setToastT} initialTab={viewProps.tab || "Meds"} initialFocus={viewProps.focus}/>,
     mood:     <ScreenMood go={go} mood={mood} setMood={(m) => { setMood(m); setEntries([{ id: Date.now(), kind: "mood", ...m }, ...entries]); }} toast={setToastT}/>,
     journal:  <ScreenJournal go={go} entries={entries} setEntries={setEntries} mood={mood} openCompose={viewProps.compose}/>,
-    insights: <ScreenInsights go={go}/>,
+    insights: <ScreenInsights go={go} entries={entries} meds={meds} symptoms={symptoms} activities={activities}/>,
+    report:   <ScreenReport go={go} entries={entries} meds={meds} symptoms={symptoms} activities={activities} profile={profile}/>,
     settings: <ScreenSettings go={go} profile={profile} setProfile={setProfile} reminders={reminders} setReminders={setReminders}/>,
     history:  <ScreenHistory go={go} entries={entries}/>,
   };
@@ -3352,6 +3947,7 @@ function App() {
                   setProfile(p => ({
                     ...p,
                     name: data.name || p.name,
+                    email: data.email || p.email,
                     pronouns: data.pronouns || p.pronouns,
                     therapist: data.therapist || p.therapist,
                     therapistEmail: data.therapistEmail || p.therapistEmail,
@@ -3438,7 +4034,7 @@ function App() {
             {[
               {k:"today",label:"Today"},{k:"care",label:"Care"},{k:"mood",label:"Mood"},
               {k:"journal",label:"Journal"},{k:"insights",label:"Insights"},
-              {k:"settings",label:"Settings"},{k:"history",label:"History"},
+              {k:"report",label:"Report"},{k:"settings",label:"Settings"},{k:"history",label:"History"},
             ].map(s => (
               <button key={s.k} className={`tweak-nav-btn ${view===s.k?"active":""}`} onClick={() => go(s.k)}>{s.label}</button>
             ))}
