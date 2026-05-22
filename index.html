@@ -4352,16 +4352,23 @@ function App() {
                 defaultName={profile.name}
                 onSignIn={() => {/* no backend yet — message shown inline */}}
                 onComplete={(data) => {
-                  setProfile(p => ({
-                    ...p,
-                    name: data.name || p.name,
-                    email: data.email || p.email,
-                    pronouns: data.pronouns || p.pronouns,
-                    therapist: data.therapist || p.therapist,
-                    therapistEmail: data.therapistEmail || p.therapistEmail,
-                    conditions: data.reasons.length ? data.reasons : p.conditions,
-                    biometricLock: data.biometricLock,
-                  }));
+                  // Reset all user data to a clean slate for the new account
+                  setMeds([]);
+                  setMood(null);
+                  setSymptoms([]);
+                  setEntries([]);
+                  setActivities([]);
+                  try { localStorage.removeItem("daily-v2-data"); } catch {}
+                  // Populate profile + reminders from onboarding answers
+                  setProfile({
+                    name: data.name || "",
+                    email: data.email || "",
+                    pronouns: data.pronouns || "",
+                    therapist: data.therapist || "",
+                    therapistEmail: data.therapistEmail || "",
+                    conditions: data.reasons || [],
+                    biometricLock: data.biometricLock || false,
+                  });
                   setReminders(r => ({
                     ...r,
                     checkinTime: data.checkinTime || r.checkinTime,
