@@ -1089,6 +1089,31 @@ body[data-radius="Sharp"] { --r: 6px; }
 .act-full-row { padding: 0 var(--pad); margin-bottom: 4px; }
 .act-bool-row { display: flex; justify-content: space-between; align-items: center; background: var(--surface); border-radius: var(--r); padding: 12px; }
 
+/* ====== Medication Autocomplete ====== */
+.med-ac-wrap { position: relative; }
+.med-suggest-list {
+  background: var(--surface); border: 1px solid var(--line);
+  border-radius: var(--r); overflow: hidden;
+  margin-top: 4px; box-shadow: 0 4px 16px rgba(0,0,0,.12);
+}
+.med-suggest-item {
+  display: flex; flex-direction: column; gap: 1px;
+  padding: 10px 12px; cursor: pointer; border: none;
+  background: none; width: 100%; text-align: left;
+  border-bottom: 1px solid var(--line); font-family: inherit;
+}
+.med-suggest-item:last-child { border-bottom: none; }
+.med-suggest-item:active { background: var(--accent-soft); }
+.msi-name { font-size: 14px; font-weight: 600; color: var(--text); }
+.msi-meta { font-size: 11px; color: var(--muted); }
+.dose-chip-row { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 2px; }
+.dose-chip {
+  padding: 5px 11px; border-radius: 20px; font-size: 12px; font-weight: 500;
+  background: var(--surface); color: var(--text); border: 1px solid var(--line);
+  cursor: pointer; transition: all .15s; font-family: inherit;
+}
+.dose-chip.on { background: var(--accent); color: var(--accent-ink); border-color: var(--accent); }
+
 /* ====== Side Effect Presets ====== */
 .se-grid { display: flex; flex-wrap: wrap; gap: 6px; padding: 8px var(--pad); }
 .se-tag { padding: 6px 11px; border-radius: 20px; font-size: 12px; background: var(--surface); color: var(--text); border: 1px solid var(--line); cursor: pointer; transition: all .15s; }
@@ -1851,11 +1876,111 @@ function ScreenCare({ go, meds, setMeds, symptoms, setSymptoms, activities, setA
 /* ===== Meds ===== */
 const BLANK_MED = { name: "", dose: "", time: "8:00 AM", note: "", purpose: "", warn: "" };
 
+const MED_DB = [
+  /* ── Antidepressants (SSRIs) ── */
+  { name:"Sertraline",      brand:"Zoloft",       cat:"Antidepressant · SSRI",     doses:["25mg","50mg","100mg","150mg","200mg"],       purpose:"Depression, anxiety, OCD, PTSD" },
+  { name:"Fluoxetine",      brand:"Prozac",        cat:"Antidepressant · SSRI",     doses:["10mg","20mg","40mg","60mg"],                  purpose:"Depression, OCD, panic disorder" },
+  { name:"Escitalopram",    brand:"Lexapro",       cat:"Antidepressant · SSRI",     doses:["5mg","10mg","20mg"],                          purpose:"Depression, generalized anxiety" },
+  { name:"Citalopram",      brand:"Celexa",        cat:"Antidepressant · SSRI",     doses:["10mg","20mg","40mg"],                         purpose:"Depression, anxiety" },
+  { name:"Paroxetine",      brand:"Paxil",         cat:"Antidepressant · SSRI",     doses:["10mg","20mg","30mg","40mg"],                  purpose:"Depression, anxiety, PTSD, OCD" },
+  { name:"Fluvoxamine",     brand:"Luvox",         cat:"Antidepressant · SSRI",     doses:["50mg","100mg","150mg","200mg"],               purpose:"OCD, social anxiety" },
+  /* ── Antidepressants (SNRIs) ── */
+  { name:"Venlafaxine",     brand:"Effexor",       cat:"Antidepressant · SNRI",     doses:["37.5mg","75mg","150mg","225mg"],              purpose:"Depression, anxiety, panic disorder" },
+  { name:"Duloxetine",      brand:"Cymbalta",      cat:"Antidepressant · SNRI",     doses:["20mg","30mg","60mg"],                         purpose:"Depression, anxiety, nerve pain" },
+  { name:"Desvenlafaxine",  brand:"Pristiq",       cat:"Antidepressant · SNRI",     doses:["25mg","50mg","100mg"],                        purpose:"Depression" },
+  { name:"Levomilnacipran", brand:"Fetzima",       cat:"Antidepressant · SNRI",     doses:["20mg","40mg","80mg","120mg"],                 purpose:"Depression" },
+  /* ── Antidepressants (Other) ── */
+  { name:"Bupropion",       brand:"Wellbutrin",    cat:"Antidepressant · NDRI",     doses:["75mg","100mg","150mg","300mg"],               purpose:"Depression, seasonal affective disorder, smoking cessation" },
+  { name:"Mirtazapine",     brand:"Remeron",       cat:"Antidepressant",            doses:["7.5mg","15mg","30mg","45mg"],                 purpose:"Depression, sleep, appetite" },
+  { name:"Trazodone",       brand:"Desyrel",       cat:"Antidepressant",            doses:["50mg","100mg","150mg","300mg"],               purpose:"Depression, insomnia" },
+  { name:"Vilazodone",      brand:"Viibryd",       cat:"Antidepressant · SSRI",     doses:["10mg","20mg","40mg"],                         purpose:"Depression" },
+  { name:"Vortioxetine",    brand:"Trintellix",    cat:"Antidepressant",            doses:["5mg","10mg","15mg","20mg"],                   purpose:"Depression" },
+  /* ── TCAs ── */
+  { name:"Amitriptyline",   brand:"Elavil",        cat:"Antidepressant · TCA",      doses:["10mg","25mg","50mg","75mg","100mg","150mg"],  purpose:"Depression, nerve pain, migraine prevention" },
+  { name:"Nortriptyline",   brand:"Pamelor",       cat:"Antidepressant · TCA",      doses:["10mg","25mg","50mg","75mg"],                  purpose:"Depression, nerve pain" },
+  { name:"Clomipramine",    brand:"Anafranil",     cat:"Antidepressant · TCA",      doses:["25mg","50mg","75mg"],                         purpose:"OCD, depression" },
+  /* ── Antianxiety ── */
+  { name:"Buspirone",       brand:"Buspar",        cat:"Antianxiety",               doses:["5mg","10mg","15mg","30mg"],                   purpose:"Generalized anxiety disorder" },
+  { name:"Hydroxyzine",     brand:"Vistaril",      cat:"Antianxiety · Antihistamine",doses:["10mg","25mg","50mg","100mg"],                purpose:"Anxiety, allergies, sleep" },
+  { name:"Lorazepam",       brand:"Ativan",        cat:"Benzodiazepine",            doses:["0.5mg","1mg","2mg"],                          purpose:"Anxiety, panic, acute agitation" },
+  { name:"Clonazepam",      brand:"Klonopin",      cat:"Benzodiazepine",            doses:["0.25mg","0.5mg","1mg","2mg"],                 purpose:"Panic disorder, seizures" },
+  { name:"Alprazolam",      brand:"Xanax",         cat:"Benzodiazepine",            doses:["0.25mg","0.5mg","1mg","2mg"],                 purpose:"Anxiety, panic disorder" },
+  { name:"Diazepam",        brand:"Valium",        cat:"Benzodiazepine",            doses:["2mg","5mg","10mg"],                           purpose:"Anxiety, muscle spasms, seizures" },
+  /* ── Antipsychotics ── */
+  { name:"Quetiapine",      brand:"Seroquel",      cat:"Antipsychotic · Atypical",  doses:["25mg","50mg","100mg","200mg","300mg","400mg"],purpose:"Schizophrenia, bipolar, depression augmentation" },
+  { name:"Aripiprazole",    brand:"Abilify",       cat:"Antipsychotic · Atypical",  doses:["2mg","5mg","10mg","15mg","20mg","30mg"],      purpose:"Schizophrenia, bipolar, depression augmentation" },
+  { name:"Risperidone",     brand:"Risperdal",     cat:"Antipsychotic · Atypical",  doses:["0.5mg","1mg","2mg","3mg","4mg"],              purpose:"Schizophrenia, bipolar, irritability" },
+  { name:"Olanzapine",      brand:"Zyprexa",       cat:"Antipsychotic · Atypical",  doses:["2.5mg","5mg","7.5mg","10mg","15mg","20mg"],   purpose:"Schizophrenia, bipolar" },
+  { name:"Lurasidone",      brand:"Latuda",        cat:"Antipsychotic · Atypical",  doses:["20mg","40mg","60mg","80mg","120mg"],          purpose:"Schizophrenia, bipolar depression" },
+  { name:"Ziprasidone",     brand:"Geodon",        cat:"Antipsychotic · Atypical",  doses:["20mg","40mg","60mg","80mg"],                  purpose:"Schizophrenia, bipolar" },
+  { name:"Paliperidone",    brand:"Invega",        cat:"Antipsychotic · Atypical",  doses:["1.5mg","3mg","6mg","9mg"],                   purpose:"Schizophrenia, schizoaffective" },
+  { name:"Haloperidol",     brand:"Haldol",        cat:"Antipsychotic · Typical",   doses:["0.5mg","1mg","2mg","5mg","10mg","20mg"],      purpose:"Schizophrenia, Tourette's" },
+  /* ── Mood Stabilizers ── */
+  { name:"Lithium Carbonate",brand:"Lithobid",     cat:"Mood Stabilizer",           doses:["150mg","300mg","600mg"],                      purpose:"Bipolar disorder, mania" },
+  { name:"Valproic Acid",   brand:"Depakote",      cat:"Mood Stabilizer",           doses:["125mg","250mg","500mg"],                      purpose:"Bipolar, seizures, migraine prevention" },
+  { name:"Lamotrigine",     brand:"Lamictal",      cat:"Mood Stabilizer / Anticonvulsant",doses:["25mg","50mg","100mg","150mg","200mg"],  purpose:"Bipolar, seizures, depression" },
+  { name:"Carbamazepine",   brand:"Tegretol",      cat:"Mood Stabilizer / Anticonvulsant",doses:["100mg","200mg","400mg"],               purpose:"Bipolar, seizures, nerve pain" },
+  { name:"Topiramate",      brand:"Topamax",       cat:"Anticonvulsant",            doses:["25mg","50mg","100mg","200mg"],                purpose:"Seizures, migraine prevention" },
+  /* ── ADHD ── */
+  { name:"Methylphenidate", brand:"Ritalin",       cat:"ADHD · Stimulant",          doses:["5mg","10mg","20mg"],                          purpose:"ADHD" },
+  { name:"Methylphenidate ER",brand:"Concerta",    cat:"ADHD · Stimulant",          doses:["18mg","27mg","36mg","54mg"],                  purpose:"ADHD" },
+  { name:"Mixed Amphetamine Salts",brand:"Adderall",cat:"ADHD · Stimulant",         doses:["5mg","7.5mg","10mg","12.5mg","15mg","20mg","30mg"],purpose:"ADHD, narcolepsy" },
+  { name:"Amphetamine XR",  brand:"Adderall XR",   cat:"ADHD · Stimulant",          doses:["5mg","10mg","15mg","20mg","25mg","30mg"],     purpose:"ADHD" },
+  { name:"Lisdexamfetamine",brand:"Vyvanse",       cat:"ADHD · Stimulant",          doses:["20mg","30mg","40mg","50mg","60mg","70mg"],    purpose:"ADHD, binge eating disorder" },
+  { name:"Atomoxetine",     brand:"Strattera",     cat:"ADHD · Non-stimulant",      doses:["10mg","18mg","25mg","40mg","60mg","80mg","100mg"],purpose:"ADHD" },
+  { name:"Guanfacine",      brand:"Intuniv",       cat:"ADHD · Non-stimulant",      doses:["1mg","2mg","3mg","4mg"],                      purpose:"ADHD" },
+  { name:"Clonidine",       brand:"Kapvay",        cat:"ADHD · Non-stimulant",      doses:["0.1mg","0.2mg"],                              purpose:"ADHD, hypertension" },
+  /* ── Sleep ── */
+  { name:"Zolpidem",        brand:"Ambien",        cat:"Sleep Aid",                 doses:["5mg","10mg"],                                 purpose:"Short-term insomnia" },
+  { name:"Eszopiclone",     brand:"Lunesta",       cat:"Sleep Aid",                 doses:["1mg","2mg","3mg"],                            purpose:"Insomnia" },
+  { name:"Melatonin",       brand:"",              cat:"Sleep Aid · Supplement",    doses:["0.5mg","1mg","2.5mg","5mg","10mg"],           purpose:"Sleep regulation, jet lag" },
+  { name:"Ramelteon",       brand:"Rozerem",       cat:"Sleep Aid",                 doses:["8mg"],                                        purpose:"Insomnia, sleep onset" },
+  { name:"Suvorexant",      brand:"Belsomra",      cat:"Sleep Aid",                 doses:["5mg","10mg","15mg","20mg"],                   purpose:"Insomnia" },
+  /* ── Beta Blockers ── */
+  { name:"Propranolol",     brand:"Inderal",       cat:"Beta Blocker",              doses:["10mg","20mg","40mg","60mg","80mg"],           purpose:"Anxiety, hypertension, migraine, tremors" },
+  { name:"Metoprolol",      brand:"Lopressor",     cat:"Beta Blocker",              doses:["25mg","50mg","100mg","200mg"],                purpose:"Hypertension, heart conditions" },
+  { name:"Atenolol",        brand:"Tenormin",      cat:"Beta Blocker",              doses:["25mg","50mg","100mg"],                        purpose:"Hypertension, angina" },
+  /* ── Blood Pressure ── */
+  { name:"Lisinopril",      brand:"Zestril",       cat:"ACE Inhibitor",             doses:["2.5mg","5mg","10mg","20mg","40mg"],           purpose:"Hypertension, heart failure" },
+  { name:"Amlodipine",      brand:"Norvasc",       cat:"Calcium Channel Blocker",   doses:["2.5mg","5mg","10mg"],                         purpose:"Hypertension, angina" },
+  { name:"Losartan",        brand:"Cozaar",        cat:"ARB",                       doses:["25mg","50mg","100mg"],                        purpose:"Hypertension, kidney protection" },
+  { name:"Hydrochlorothiazide",brand:"HCTZ",       cat:"Diuretic",                  doses:["12.5mg","25mg","50mg"],                       purpose:"Hypertension, edema" },
+  /* ── Gabapentinoids ── */
+  { name:"Gabapentin",      brand:"Neurontin",     cat:"Anticonvulsant / Nerve Pain",doses:["100mg","300mg","400mg","600mg","800mg"],     purpose:"Nerve pain, seizures, anxiety off-label" },
+  { name:"Pregabalin",      brand:"Lyrica",        cat:"Anticonvulsant / Nerve Pain",doses:["25mg","50mg","75mg","100mg","150mg","200mg","225mg","300mg"],purpose:"Nerve pain, fibromyalgia, anxiety" },
+  /* ── Thyroid ── */
+  { name:"Levothyroxine",   brand:"Synthroid",     cat:"Thyroid",                   doses:["25mcg","50mcg","75mcg","88mcg","100mcg","112mcg","125mcg","150mcg","175mcg","200mcg"],purpose:"Hypothyroidism" },
+  /* ── Diabetes ── */
+  { name:"Metformin",       brand:"Glucophage",    cat:"Antidiabetic",              doses:["500mg","850mg","1000mg"],                     purpose:"Type 2 diabetes, blood sugar control" },
+  { name:"Glipizide",       brand:"Glucotrol",     cat:"Antidiabetic",              doses:["2.5mg","5mg","10mg"],                         purpose:"Type 2 diabetes" },
+  /* ── Pain ── */
+  { name:"Ibuprofen",       brand:"Advil",         cat:"NSAID",                     doses:["200mg","400mg","600mg","800mg"],              purpose:"Pain, inflammation, fever" },
+  { name:"Naproxen",        brand:"Aleve",         cat:"NSAID",                     doses:["220mg","250mg","375mg","500mg"],              purpose:"Pain, inflammation, arthritis" },
+  { name:"Acetaminophen",   brand:"Tylenol",       cat:"Analgesic",                 doses:["325mg","500mg","650mg","1000mg"],             purpose:"Pain, fever" },
+  { name:"Celecoxib",       brand:"Celebrex",      cat:"NSAID · COX-2",             doses:["100mg","200mg","400mg"],                      purpose:"Arthritis, pain, inflammation" },
+  /* ── Supplements ── */
+  { name:"Vitamin D3",      brand:"",              cat:"Supplement",                doses:["400IU","1000IU","2000IU","5000IU"],           purpose:"Bone health, immune support, mood" },
+  { name:"Vitamin B12",     brand:"",              cat:"Supplement",                doses:["100mcg","500mcg","1000mcg","2500mcg"],        purpose:"Nerve health, energy, red blood cells" },
+  { name:"Folic Acid",      brand:"",              cat:"Supplement",                doses:["0.4mg","0.8mg","1mg"],                        purpose:"Cell growth, pregnancy support" },
+  { name:"Magnesium",       brand:"",              cat:"Supplement",                doses:["200mg","250mg","400mg","500mg"],              purpose:"Muscle, nerve, sleep, mood" },
+  { name:"Omega-3 Fish Oil",brand:"",              cat:"Supplement",                doses:["500mg","1000mg","1200mg","2000mg"],           purpose:"Heart health, brain health, mood" },
+  { name:"Zinc",            brand:"",              cat:"Supplement",                doses:["10mg","25mg","50mg"],                         purpose:"Immune support, wound healing" },
+  { name:"Iron",            brand:"",              cat:"Supplement",                doses:["18mg","27mg","65mg","325mg"],                 purpose:"Iron deficiency, anemia" },
+  { name:"Vitamin C",       brand:"",              cat:"Supplement",                doses:["250mg","500mg","1000mg"],                     purpose:"Immune support, antioxidant" },
+  /* ── Other Common ── */
+  { name:"Omeprazole",      brand:"Prilosec",      cat:"Proton Pump Inhibitor",     doses:["10mg","20mg","40mg"],                         purpose:"Acid reflux, GERD, stomach ulcers" },
+  { name:"Cetirizine",      brand:"Zyrtec",        cat:"Antihistamine",             doses:["5mg","10mg"],                                 purpose:"Allergies, hay fever, hives" },
+  { name:"Montelukast",     brand:"Singulair",     cat:"Leukotriene Inhibitor",     doses:["4mg","5mg","10mg"],                           purpose:"Asthma, allergies" },
+];
+
 function PaneMeds({ meds, setMeds, toast }) {
   const [editing, setEditing]       = useState_C(null);
   const [adding, setAdding]         = useState_C(false);
   const [newMed, setNewMed]         = useState_C(BLANK_MED);
   const [confirmDel, setConfirmDel] = useState_C(null); // stores "name|dose" key
+  const [medSearch, setMedSearch]   = useState_C("");
+  const [selectedMedInfo, setSelectedMedInfo] = useState_C(null);
+  const [showSuggestions, setShowSuggestions] = useState_C(false);
 
   const taken  = meds.filter(m => m.taken).length;
   const adh14  = 92;
@@ -2007,33 +2132,98 @@ function PaneMeds({ meds, setMeds, toast }) {
       </div>
 
       {/* ── Add medication sheet ── */}
-      <Sheet open={adding} onClose={() => { setAdding(false); setNewMed(BLANK_MED); }} title="Add medication">
+      <Sheet open={adding} onClose={() => {
+        setAdding(false); setNewMed(BLANK_MED);
+        setMedSearch(""); setSelectedMedInfo(null); setShowSuggestions(false);
+      }} title="Add medication">
         <div className="form" style={{paddingBottom: 8}}>
+
+          {/* Medication name with autocomplete */}
           <label className="form-l caps xsmall muted">Medication name *</label>
-          <input className="text-input" placeholder="e.g. Sertraline" value={newMed.name}
-            onChange={e => setNewMed({...newMed, name: e.target.value})} autoFocus/>
+          <div className="med-ac-wrap">
+            <input
+              className="text-input"
+              placeholder="Type to search medications…"
+              value={medSearch}
+              autoFocus
+              autoComplete="off"
+              onChange={e => {
+                const v = e.target.value;
+                setMedSearch(v);
+                setNewMed(n => ({...n, name: v}));
+                setShowSuggestions(v.length >= 1);
+                if (!v) { setSelectedMedInfo(null); }
+              }}
+              onFocus={() => { if (medSearch.length >= 1) setShowSuggestions(true); }}
+            />
+            {showSuggestions && (() => {
+              const q = medSearch.toLowerCase();
+              const hits = MED_DB.filter(m =>
+                m.name.toLowerCase().includes(q) ||
+                (m.brand && m.brand.toLowerCase().includes(q))
+              ).slice(0, 7);
+              return hits.length > 0 ? (
+                <div className="med-suggest-list">
+                  {hits.map(m => (
+                    <button key={m.name} className="med-suggest-item" onMouseDown={e => e.preventDefault()} onClick={() => {
+                      setMedSearch(m.name);
+                      setNewMed(n => ({...n, name: m.name, purpose: n.purpose || m.purpose || ""}));
+                      setSelectedMedInfo(m);
+                      setShowSuggestions(false);
+                    }}>
+                      <span className="msi-name">{m.name}{m.brand ? <span className="muted regular" style={{fontWeight:400}}> · {m.brand}</span> : ""}</span>
+                      <span className="msi-meta">{m.cat}{m.purpose ? " · " + m.purpose.slice(0,50) : ""}</span>
+                    </button>
+                  ))}
+                </div>
+              ) : null;
+            })()}
+          </div>
 
-          <label className="form-l caps xsmall muted">Dose *</label>
-          <input className="text-input" placeholder="e.g. 50mg" value={newMed.dose}
-            onChange={e => setNewMed({...newMed, dose: e.target.value})}/>
+          {/* Dose with chips */}
+          <label className="form-l caps xsmall muted" style={{marginTop:14}}>Dose *</label>
+          {selectedMedInfo && (
+            <div className="dose-chip-row" style={{marginBottom:6}}>
+              {selectedMedInfo.doses.map(d => (
+                <button key={d} className={`dose-chip ${newMed.dose===d?"on":""}`}
+                  onClick={() => setNewMed(n => ({...n, dose: d}))}>
+                  {d}
+                </button>
+              ))}
+            </div>
+          )}
+          <input className="text-input" placeholder={selectedMedInfo ? "Tap a dose above or type custom" : "e.g. 50mg"}
+            value={newMed.dose} onChange={e => setNewMed(n => ({...n, dose: e.target.value}))}/>
 
-          <label className="form-l caps xsmall muted">Time / schedule *</label>
-          <input className="text-input" placeholder="e.g. 8:00 AM" value={newMed.time}
-            onChange={e => setNewMed({...newMed, time: e.target.value})}/>
+          {/* Time */}
+          <label className="form-l caps xsmall muted" style={{marginTop:14}}>Time / schedule *</label>
+          <div className="dose-chip-row" style={{marginBottom:6}}>
+            {["6:00 AM","7:00 AM","8:00 AM","9:00 AM","12:00 PM","2:00 PM","6:00 PM","8:00 PM","10:00 PM","Bedtime","As needed"].map(t => (
+              <button key={t} className={`dose-chip ${newMed.time===t?"on":""}`}
+                onClick={() => setNewMed(n => ({...n, time: t}))}>
+                {t}
+              </button>
+            ))}
+          </div>
+          <input className="text-input" placeholder="Or type a custom time"
+            value={newMed.time} onChange={e => setNewMed(n => ({...n, time: e.target.value}))}/>
 
-          <label className="form-l caps xsmall muted">Notes</label>
+          {/* Notes */}
+          <label className="form-l caps xsmall muted" style={{marginTop:14}}>Notes</label>
           <input className="text-input" placeholder="e.g. with breakfast, as needed"
-            value={newMed.note} onChange={e => setNewMed({...newMed, note: e.target.value})}/>
+            value={newMed.note} onChange={e => setNewMed(n => ({...n, note: e.target.value}))}/>
 
-          <label className="form-l caps xsmall muted">Purpose (optional)</label>
+          {/* Purpose — auto-filled from DB, editable */}
+          <label className="form-l caps xsmall muted" style={{marginTop:14}}>Purpose (optional)</label>
           <input className="text-input" placeholder="e.g. For anxiety & depression"
-            value={newMed.purpose} onChange={e => setNewMed({...newMed, purpose: e.target.value})}/>
+            value={newMed.purpose} onChange={e => setNewMed(n => ({...n, purpose: e.target.value}))}/>
 
-          <label className="form-l caps xsmall muted">Warnings / side effects (optional)</label>
-          <input className="text-input" placeholder="e.g. Take with food"
-            value={newMed.warn} onChange={e => setNewMed({...newMed, warn: e.target.value})}/>
+          {/* Warnings */}
+          <label className="form-l caps xsmall muted" style={{marginTop:14}}>Warnings / notes (optional)</label>
+          <input className="text-input" placeholder="e.g. Take with food, avoid grapefruit"
+            value={newMed.warn} onChange={e => setNewMed(n => ({...n, warn: e.target.value}))}/>
 
-          <button className="btn primary" style={{marginTop: 8}}
+          <button className="btn primary" style={{marginTop:16}}
             disabled={!newMed.name.trim() || !newMed.dose.trim() || !newMed.time.trim()}
             onClick={saveMed}>
             <IconCheck size={14}/> Save medication
