@@ -1707,7 +1707,9 @@ function relTime(ms) {
 function ScreenToday({ name, mood, setMood, meds, setMeds, journalCount, breathingMin, go, toast, openLog, openSettings }) {
   const hour = new Date().getHours();
   const greeting = hour < 12 ? "Good morning" : hour < 17 ? "Good afternoon" : "Good evening";
-  const takenCount = meds.filter(m => m.taken).length;
+  const todayStr = new Date().toISOString().split("T")[0];
+  const isTakenToday = (m) => !!(m.taken && typeof m.taken === "object" && m.taken[todayStr]);
+  const takenCount = meds.filter(isTakenToday).length;
 
   return (
     <div className="scroll" data-screen-label="Today">
@@ -1716,7 +1718,7 @@ function ScreenToday({ name, mood, setMood, meds, setMeds, journalCount, breathi
           <div className="muted xsmall caps">
             {new Date().toLocaleDateString(undefined, { weekday: "long", month: "long", day: "numeric" })}
           </div>
-          <h1 className="serif today-greeting">{greeting}, {name.split(" ")[0]}.</h1>
+          <h1 className="serif today-greeting">{greeting}{name && name.trim() ? `, ${name.trim().split(" ")[0]}` : ''}.</h1>
         </div>
         <button className="icon-btn" onClick={openSettings} aria-label="Settings">
           <IconSettings size={18}/>
@@ -1759,13 +1761,13 @@ function ScreenToday({ name, mood, setMood, meds, setMeds, journalCount, breathi
           </div>
           <div className="today-meds-dots">
             {meds.map(m => (
-              <span key={m.id} className={`today-med-dot ${m.taken ? "taken" : ""}`}/>
+              <span key={m.id} className={`today-med-dot ${isTakenToday(m) ? "taken" : ""}`}/>
             ))}
           </div>
         </div>
         {takenCount < meds.length && (
           <div className="muted small" style={{marginTop: 8}}>
-            {meds.filter(m => !m.taken).map(m => m.name).join(", ")} still due.
+            {meds.filter(m => !isTakenToday(m)).map(m => m.name).join(", ")} still due.
           </div>
         )}
       </Card>
@@ -2020,14 +2022,39 @@ function PaneMeds({ meds, setMeds, toast }) {
   const [selectedMedInfo, setSelectedMedInfo] = useState_C(null);
   const [showSuggestions, setShowSuggestions] = useState_C(false);
 
-  const taken  = meds.filter(m => m.taken).length;
-  const adh14  = 92;
+  const todayStr = new Date().toISOString().split("T")[0];
+  const isTakenToday = (m) => !!(m.taken && typeof m.taken === "object" && m.taken[todayStr]);
+  const taken = meds.filter(isTakenToday).length;
+
+  /* ── 14-day adherence from date-keyed taken history ── */
+  const adh14 = (() => {
+    if (!meds.length) return 0;
+    let total = 0, takenDoses = 0;
+    for (let i = 0; i < 14; i++) {
+      const d = new Date(); d.setDate(d.getDate() - i);
+      const ds = d.toISOString().split("T")[0];
+      meds.forEach(m => { total++; if (m.taken && m.taken[ds]) takenDoses++; });
+    }
+    return total === 0 ? 100 : Math.round(takenDoses / total * 100);
+  })();
+
+  const sparkValues = Array.from({ length: 14 }, (_, i) => {
+    const d = new Date(); d.setDate(d.getDate() - 13 + i);
+    const ds = d.toISOString().split("T")[0];
+    const takenOnDay = meds.filter(m => m.taken && m.taken[ds]).length;
+    return meds.length ? takenOnDay / meds.length : 0;
+  });
 
   /* ── mark taken / untaken ── */
   const onCheck = (id) => {
     const m = meds.find(x => x.id === id);
-    setMeds(meds.map(x => x.id === id ? { ...x, taken: !x.taken, takenAt: !x.taken ? new Date().toLocaleTimeString([], {hour:"numeric",minute:"2-digit"}) : undefined } : x));
-    if (m && !m.taken) toast({ msg: `${m.name} marked taken`, undo: true, kind: "med", id });
+    const wasTaken = isTakenToday(m);
+    setMeds(meds.map(x => x.id === id ? {
+      ...x,
+      taken: { ...(typeof x.taken === "object" && x.taken ? x.taken : {}), [todayStr]: !wasTaken },
+      takenAt: !wasTaken ? new Date().toLocaleTimeString([], {hour:"numeric",minute:"2-digit"}) : undefined,
+    } : x));
+    if (m && !wasTaken) toast({ msg: `${m.name} marked taken`, undo: true, kind: "med", id });
   };
 
   /* ── add new medication ── */
@@ -2081,7 +2108,7 @@ function PaneMeds({ meds, setMeds, toast }) {
             </svg>
           </div>
         </div>
-        <Sparkbars values={[1,1,.7,1,1,1,1,1,.45,1,1,1,1,.9]} accent="#FBF5EC" muted="#FBF5EC55" height={32}/>
+        <Sparkbars values={sparkValues} accent="#FBF5EC" muted="#FBF5EC55" height={32}/>
       </Card>
 
       {/* ── Today's doses ── */}
@@ -2094,13 +2121,13 @@ function PaneMeds({ meds, setMeds, toast }) {
       {meds.map(m => (
         <Card key={m.id} className="med-row-card">
           <div className="med-row-inner">
-            <button className={`check ${m.taken?"on":""}`} onClick={() => onCheck(m.id)} aria-label={m.taken?"Mark untaken":"Mark taken"}>
-              {m.taken && <IconCheck size={14}/>}
+            <button className={`check ${isTakenToday(m)?"on":""}`} onClick={() => onCheck(m.id)} aria-label={isTakenToday(m)?"Mark untaken":"Mark taken"}>
+              {isTakenToday(m) && <IconCheck size={14}/>}
             </button>
             <div className="med-meta">
               <div className="med-name">{m.name} <span className="muted regular">{m.dose}</span></div>
               <div className="muted xsmall">{m.time}{m.note ? ` · ${m.note}` : ""}</div>
-              {m.taken && <div className="taken-stamp xsmall">✓ Taken at {m.takenAt || m.time}</div>}
+              {isTakenToday(m) && <div className="taken-stamp xsmall">{m.takenAt ? `✓ Taken at ${m.takenAt}` : '✓ Taken'}</div>}
             </div>
             <button className="more" onClick={() => setEditing(editing === m.id ? null : m.id)} aria-label="Options">
               <IconMore size={16}/>
@@ -2151,7 +2178,7 @@ function PaneMeds({ meds, setMeds, toast }) {
             </div>
             <div className="med-card-chips" style={{marginTop:8}}>
               <span className="chip"><span className="chip-dot dot-good"/>{adh14}% adherence</span>
-              <span className="chip"><IconClock size={11}/> {m.supply || "—"} days left</span>
+              {m.supply ? <span className="chip"><IconClock size={11}/> {m.supply} days left</span> : null}
             </div>
             {m.warn && (
               <div className="warn-row"><IconAlert size={13}/> <span>{m.warn}</span></div>
@@ -2442,7 +2469,7 @@ function PaneSymptoms({ items, setItems, meds, toast }) {
 function PaneActivity({ activities, setActivities, toast }) {
   const todayKey = new Date().toDateString();
   const todayLog = activities.find(a => new Date(a.t).toDateString() === todayKey) || null;
-  const [log, setLog] = useState_C(todayLog || { sleep: 7, exercise: 0, stress: 3, social: 3, appetite: 3, caffeine: false, alcohol: false, note: "" });
+  const [log, setLog] = useState_C(todayLog || { sleep: 0, exercise: 0, stress: 0, social: 0, appetite: 0, caffeine: false, alcohol: false, note: "" });
   const [saved, setSaved] = useState_C(!!todayLog);
 
   const setVal = (k, v) => { setLog(l => ({...l, [k]: v})); setSaved(false); };
@@ -2493,19 +2520,19 @@ function PaneActivity({ activities, setActivities, toast }) {
       <div className="activity-grid">
         <div className="act-card">
           <div className="act-label">Stress</div>
-          <div className="act-value" style={{fontSize:16}}>{["None","Very low","Low","Moderate","High","Very high"][Math.min(5,log.stress)]}</div>
+          <div className="act-value" style={{fontSize:16, color: log.stress===0?"var(--muted)":"inherit"}}>{["Tap to set","Very low","Low","Moderate","High","Very high"][Math.min(5,log.stress)]}</div>
           <LevelDots val={log.stress} max={5} danger onChange={v => setVal("stress", v)}/>
         </div>
         <div className="act-card">
           <div className="act-label">Social activity</div>
-          <div className="act-value" style={{fontSize:16}}>{["None","Minimal","Some","Moderate","Active","Very active"][Math.min(5,log.social)]}</div>
+          <div className="act-value" style={{fontSize:16, color: log.social===0?"var(--muted)":"inherit"}}>{["Tap to set","Minimal","Some","Moderate","Active","Very active"][Math.min(5,log.social)]}</div>
           <LevelDots val={log.social} max={5} onChange={v => setVal("social", v)}/>
         </div>
       </div>
       <div className="activity-grid">
         <div className="act-card">
           <div className="act-label">Appetite</div>
-          <div className="act-value" style={{fontSize:16}}>{["None","Poor","Low","Normal","Good","Great"][Math.min(5,log.appetite)]}</div>
+          <div className="act-value" style={{fontSize:16, color: log.appetite===0?"var(--muted)":"inherit"}}>{["Tap to set","Poor","Low","Normal","Good","Great"][Math.min(5,log.appetite)]}</div>
           <LevelDots val={log.appetite} max={5} onChange={v => setVal("appetite", v)}/>
         </div>
         <div className="act-card" style={{justifyContent:"space-between"}}>
@@ -2682,6 +2709,13 @@ function ScreenJournal({ go, entries, setEntries, mood, openCompose }) {
   const [draft, setDraft] = useState_J("");
   const [filter, setFilter] = useState_J("All");
 
+  // Robust date helper — handles both numeric timestamp (e.t) and date string (e.date)
+  const entryTs = (e) => {
+    if (e.t && typeof e.t === "number") return e.t;
+    if (e.date) return new Date(e.date + "T12:00:00").getTime();
+    return Date.now();
+  };
+
   const filtered = entries.filter(e =>
     filter === "All" ? true :
     filter === "Mood" ? e.kind === "mood" :
@@ -2747,7 +2781,7 @@ function ScreenJournal({ go, entries, setEntries, mood, openCompose }) {
                 <div>
                   {e.kind === "mood" ? (
                     <>
-                      <div className="muted xsmall caps">{new Date(e.t).toLocaleString([], { weekday:"short", hour:"numeric", minute:"2-digit" })}</div>
+                      <div className="muted xsmall caps">{new Date(entryTs(e)).toLocaleString([], { weekday:"short", month:"short", day:"numeric", hour:"numeric", minute:"2-digit" })}</div>
                       <div className="serif large">{e.label} <span className="muted xsmall">· {e.intensity ? `${e.intensity}/10` : "quick"}</span></div>
                       {e.note && <div className="entry-body">"{e.note}"</div>}
                       {e.tags && e.tags.length > 0 && (
@@ -2758,7 +2792,7 @@ function ScreenJournal({ go, entries, setEntries, mood, openCompose }) {
                     </>
                   ) : (
                     <>
-                      <div className="muted xsmall caps">{new Date(e.t).toLocaleString([], { weekday:"short", hour:"numeric", minute:"2-digit" })}</div>
+                      <div className="muted xsmall caps">{new Date(entryTs(e)).toLocaleString([], { weekday:"short", month:"short", day:"numeric", hour:"numeric", minute:"2-digit" })}</div>
                       <div className="entry-body serif large-text">{e.text}</div>
                     </>
                   )}
@@ -2776,35 +2810,64 @@ function ScreenJournal({ go, entries, setEntries, mood, openCompose }) {
 }
 
 /* ===== Insights ===== */
-function ScreenInsights({ go }) {
+function ScreenInsights({ go, entries, meds, symptoms, activities }) {
   const [sharing, setSharing] = useState_J(false);
 
-  const insights = [
-    {
-      headline: "You feel lighter on days you slept >7 hours.",
-      detail: "Mood averaged 6.8/10 on well-rested days vs 4.2/10 otherwise.",
-      tone: "good",
-      tag: "Sleep · Mood",
-    },
-    {
-      headline: "Anxiety spiked 2× more on social work days.",
-      detail: "Logged 8 of 12 anxiety entries on Tue/Thu.",
-      tone: "watch",
-      tag: "Pattern",
-    },
-    {
-      headline: "Sertraline adherence is steady at 98%.",
-      detail: "Two missed evening doses this fortnight.",
-      tone: "good",
-      tag: "Meds",
-    },
-    {
-      headline: "Box breathing helped 4 of 5 times.",
-      detail: "Anxiety dropped from 7.2 → 4.4 on average after a session.",
-      tone: "good",
-      tag: "Toolkit",
-    },
-  ];
+  const moodEntries = (entries || []).filter(e => e.kind === "mood");
+  const noteEntries = (entries || []).filter(e => e.kind === "note");
+  const hasEnoughData = moodEntries.length >= 5;
+
+  // Mood trend: compare avg of last 7 days vs prior 7 days
+  const now = Date.now();
+  const day = 86400000;
+  const recent = moodEntries.filter(e => (e.t||0) > now - 7*day);
+  const prior  = moodEntries.filter(e => (e.t||0) > now - 14*day && (e.t||0) <= now - 7*day);
+  const avg = arr => arr.length ? (arr.reduce((s,e) => s + (e.intensity||5), 0) / arr.length).toFixed(1) : null;
+  const recentAvg = avg(recent);
+  const priorAvg  = avg(prior);
+  const trendDelta = recentAvg && priorAvg ? (parseFloat(recentAvg) - parseFloat(priorAvg)).toFixed(1) : null;
+  const trendWord = !recentAvg ? "Not enough data" : trendDelta > 0 ? "Improving" : trendDelta < 0 ? "Dipping" : "Steady";
+
+  // Day-of-week average mood
+  const dowData = ["Mon","Tue","Wed","Thu","Fri","Sat","Sun"].map((d, i) => {
+    const dayEntries = moodEntries.filter(e => new Date(e.t||0).getDay() === (i+1)%7);
+    const v = dayEntries.length ? dayEntries.reduce((s,e)=>s+(e.intensity||5),0)/dayEntries.length/10 : 0;
+    const colors = ["#7B8FA8","#9C7BA7","#7AA68B","#9C7BA7","#7AA68B","#D7A65C","#7AA68B"];
+    return { d, v, c: dayEntries.length ? colors[i] : "var(--line)" };
+  });
+
+  // Build real insights from data
+  const insights = [];
+  if (hasEnoughData) {
+    // Med adherence insight
+    if (meds && meds.length) {
+      const todayStr = new Date().toISOString().split("T")[0];
+      let total = 0, takenCount = 0;
+      for (let i = 0; i < 14; i++) {
+        const d = new Date(); d.setDate(d.getDate()-i);
+        const ds = d.toISOString().split("T")[0];
+        meds.forEach(m => { total++; if (m.taken && m.taken[ds]) takenCount++; });
+      }
+      const adh = total ? Math.round(takenCount/total*100) : 0;
+      if (adh > 0) insights.push({
+        headline: `Medication adherence is at ${adh}% over 14 days.`,
+        detail: adh >= 80 ? "Great consistency — keep it up." : "Missing doses can affect how your medication works.",
+        tone: adh >= 80 ? "good" : "watch",
+        tag: "Meds",
+      });
+    }
+    // Symptom pattern
+    if (symptoms && symptoms.length >= 3) {
+      const top = Object.entries(symptoms.reduce((a,s)=>{a[s.label]=(a[s.label]||0)+1;return a;},{}))
+        .sort((a,b)=>b[1]-a[1])[0];
+      if (top) insights.push({
+        headline: `${top[0]} logged ${top[1]} time${top[1]>1?"s":""} recently.`,
+        detail: "Tracking this helps your doctor see patterns over time.",
+        tone: "watch",
+        tag: "Pattern",
+      });
+    }
+  }
 
   return (
     <div className="scroll" data-screen-label="Insights">
@@ -2812,43 +2875,52 @@ function ScreenInsights({ go }) {
 
       <Card accent className="insight-hero">
         <div className="caps xsmall op85">Trend</div>
-        <div className="serif xxlarge">Lighter</div>
-        <div className="op85 small" style={{marginTop:4}}>Your average mood is up 0.6 vs last fortnight.</div>
-        <div className="mood-bands">
-          {[
-            { c: "#9C7BA7", w: 8 },
-            { c: "#7B8FA8", w: 14 },
-            { c: "#C9C2A0", w: 22 },
-            { c: "#7AA68B", w: 34 },
-            { c: "#D7A65C", w: 22 },
-          ].map((b, i) => <span key={i} style={{ background: b.c, flex: b.w }}/>)}
+        <div className="serif xxlarge">{trendWord}</div>
+        <div className="op85 small" style={{marginTop:4}}>
+          {recentAvg
+            ? `Avg mood ${recentAvg}/10 this week${trendDelta && prior.length ? ` (${trendDelta > 0 ? "+" : ""}${trendDelta} vs prior week)` : ''}.`
+            : `Log 5+ moods to see your trend.`}
         </div>
-        <div className="row between op85 xsmall">
-          <span>Rough</span><span>Low</span><span>Okay</span><span>Good</span><span>Great</span>
-        </div>
+        {recentAvg && (
+          <>
+            <div className="mood-bands" style={{marginTop:12}}>
+              {[
+                { c: "#9C7BA7", w: 8 }, { c: "#7B8FA8", w: 14 },
+                { c: "#C9C2A0", w: 22 }, { c: "#7AA68B", w: 34 }, { c: "#D7A65C", w: 22 },
+              ].map((b, i) => <span key={i} style={{ background: b.c, flex: b.w }}/>)}
+            </div>
+            <div className="row between op85 xsmall">
+              <span>Rough</span><span>Low</span><span>Okay</span><span>Good</span><span>Great</span>
+            </div>
+          </>
+        )}
       </Card>
 
       <SectionLabel>By day of week</SectionLabel>
       <Card>
-        <div className="dow-row">
-          {[
-            { d: "Mon", v: 0.55, c: "#7B8FA8" },
-            { d: "Tue", v: 0.35, c: "#9C7BA7" },
-            { d: "Wed", v: 0.70, c: "#7AA68B" },
-            { d: "Thu", v: 0.40, c: "#9C7BA7" },
-            { d: "Fri", v: 0.78, c: "#7AA68B" },
-            { d: "Sat", v: 0.85, c: "#D7A65C" },
-            { d: "Sun", v: 0.65, c: "#7AA68B" },
-          ].map(p => (
-            <div key={p.d} className="dow">
-              <div className="dow-bar"><span style={{ height: `${p.v*100}%`, background: p.c }}/></div>
-              <div className="dow-l">{p.d}</div>
-            </div>
-          ))}
-        </div>
+        {!hasEnoughData ? (
+          <div className="empty" style={{padding:"12px 0", textAlign:"center"}}>Keep logging to see your day-of-week patterns.</div>
+        ) : (
+          <div className="dow-row">
+            {dowData.map(p => (
+              <div key={p.d} className="dow">
+                <div className="dow-bar"><span style={{ height: `${Math.max(p.v*100, p.v>0?8:0)}%`, background: p.c }}/></div>
+                <div className="dow-l">{p.d}</div>
+              </div>
+            ))}
+          </div>
+        )}
       </Card>
 
       <SectionLabel>What we noticed</SectionLabel>
+      {!hasEnoughData && (
+        <Card>
+          <div style={{padding:"8px 0", textAlign:"center"}}>
+            <div className="serif large" style={{marginBottom:6}}>Keep logging</div>
+            <div className="muted small">Log at least 5 mood check-ins to start seeing patterns here. The more you log, the smarter the insights.</div>
+          </div>
+        </Card>
+      )}
       {insights.map((i, idx) => (
         <Card key={idx} className={`insight ${i.tone}`}>
           <div className="row between" style={{alignItems:"flex-start"}}>
@@ -4124,7 +4196,7 @@ function App() {
   const [logOpen, setLogOpen] = useState_A(false);
 
   const [profile, setProfile] = useState_A({
-    name: tweaks.name || "",
+    name: "",
     pronouns: "",
     email: "",
     conditions: [],
@@ -4154,7 +4226,12 @@ function App() {
   useEffect_A(() => {
     try {
       const d = JSON.parse(localStorage.getItem("daily-v2-data") || "{}");
-      if (d.meds)       setMeds(d.meds);
+      if (d.meds)       setMeds(d.meds.map(m => ({
+        ...m,
+        // Migrate old boolean taken → date-keyed object; clear stale boolean truthy objects
+        taken: (m.taken && typeof m.taken === "object" && !Array.isArray(m.taken)) ? m.taken : {},
+        takenAt: undefined,
+      })));
       if (d.mood)       setMood(d.mood);
       if (d.symptoms)   setSymptoms(d.symptoms);
       if (d.entries)    setEntries(d.entries);
@@ -4172,12 +4249,19 @@ function App() {
 
   const [toast, setToastT] = useToast();
   const undoLast = (t) => {
-    if (t.kind === "med" && t.id) setMeds(meds.map(m => m.id === t.id ? {...m, taken: !m.taken} : m));
+    if (t.kind === "med" && t.id) {
+      const ds = new Date().toISOString().split("T")[0];
+      setMeds(meds.map(m => m.id === t.id ? {
+        ...m,
+        taken: { ...(typeof m.taken === "object" && m.taken ? m.taken : {}), [ds]: false },
+        takenAt: undefined,
+      } : m));
+    }
     if (t.kind === "mood") setMood(null);
   };
 
   const screens = {
-    today:    <ScreenToday name={profile.name} mood={mood} setMood={setMood} meds={meds} setMeds={setMeds} journalCount={entries.filter(e=>e.kind==="note").length} breathingMin={4} go={go} toast={setToastT} openLog={() => setLogOpen(true)} openSettings={() => go("settings")}/>,
+    today:    <ScreenToday name={profile.name} mood={mood} setMood={setMood} meds={meds} setMeds={setMeds} journalCount={entries.filter(e=>e.kind==="note").length} breathingMin={entries.filter(e=>e.kind==="toolkit").reduce((s,e)=>s+(e.dur||0),0)} go={go} toast={setToastT} openLog={() => setLogOpen(true)} openSettings={() => go("settings")}/>,
     care:     <ScreenCare go={go} meds={meds} setMeds={setMeds} symptoms={symptoms} setSymptoms={setSymptoms} activities={activities} setActivities={setActivities} toast={setToastT} initialTab={viewProps.tab || "Meds"} initialFocus={viewProps.focus}/>,
     mood:     <ScreenMood go={go} mood={mood} setMood={(m) => { setMood(m); setEntries([{ id: Date.now(), kind: "mood", ...m }, ...entries]); }} toast={setToastT}/>,
     journal:  <ScreenJournal go={go} entries={entries} setEntries={setEntries} mood={mood} openCompose={viewProps.compose}/>,
@@ -4366,7 +4450,6 @@ const TWEAK_DEFAULTS = /*EDITMODE-BEGIN*/{
   "palette": "Sage",
   "density": "Comfy",
   "radius": "Soft",
-  "name": "Sarah",
   "onboarded": false
 }/*EDITMODE-END*/;
 
