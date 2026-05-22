@@ -308,7 +308,7 @@ body[data-radius="Sharp"] { --r: 6px; }
   transform: translateY(100%);
   transition: transform .3s cubic-bezier(.4,0,.2,1);
   z-index: 21;
-  max-height: 88%;
+  max-height: 94%;
   display: flex; flex-direction: column;
 }
 .sheet.in { transform: translateY(0); }
@@ -329,10 +329,19 @@ body[data-radius="Sharp"] { --r: 6px; }
 
 .sheet-body {
   overflow-y: auto;
-  padding: 0 var(--pad) var(--pad);
+  flex: 1;
+  padding: 0 var(--pad) 0;
   -webkit-overflow-scrolling: touch;
 }
 .sheet-body::-webkit-scrollbar { display: none; }
+
+.sheet-footer {
+  padding: var(--pad);
+  padding-bottom: max(var(--pad), env(safe-area-inset-bottom));
+  border-top: 1px solid var(--line);
+  flex-shrink: 0;
+  background: var(--surface);
+}
 
 .sheet-divider {
   display: flex; align-items: center; gap: 10px;
@@ -1563,7 +1572,7 @@ const Toast = ({ toast, onClose, onUndo }) => {
 };
 
 /* Bottom sheet primitive */
-function Sheet({ open, onClose, title, children }) {
+function Sheet({ open, onClose, title, children, footer }) {
   return (
     <>
       <div className={`scrim ${open ? "in" : ""}`} onClick={onClose}/>
@@ -1576,6 +1585,7 @@ function Sheet({ open, onClose, title, children }) {
           </div>
         )}
         <div className="sheet-body">{children}</div>
+        {footer && <div className="sheet-footer">{footer}</div>}
       </div>
     </>
   );
@@ -2143,8 +2153,15 @@ function PaneMeds({ meds, setMeds, toast }) {
       <Sheet open={adding} onClose={() => {
         setAdding(false); setNewMed(BLANK_MED);
         setMedSearch(""); setSelectedMedInfo(null); setShowSuggestions(false);
-      }} title="Add medication">
-        <div className="form" style={{paddingBottom: 8}}>
+      }} title="Add medication"
+        footer={
+          <button className="btn primary" style={{width:"100%"}}
+            disabled={!newMed.name.trim() || !newMed.dose.trim() || !newMed.time.trim()}
+            onClick={saveMed}>
+            <IconCheck size={14}/> Save medication
+          </button>
+        }>
+        <div className="form" style={{paddingBottom: 20}}>
 
           {/* Medication name with autocomplete */}
           <label className="form-l caps xsmall muted">Medication name *</label>
@@ -2225,11 +2242,6 @@ function PaneMeds({ meds, setMeds, toast }) {
           <input className="text-input" placeholder="e.g. Take with food, avoid grapefruit"
             value={newMed.warn} onChange={e => setNewMed(n => ({...n, warn: e.target.value}))}/>
 
-          <button className="btn primary" style={{marginTop:16}}
-            disabled={!newMed.name.trim() || !newMed.dose.trim() || !newMed.time.trim()}
-            onClick={saveMed}>
-            <IconCheck size={14}/> Save medication
-          </button>
         </div>
       </Sheet>
 
