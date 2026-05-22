@@ -889,12 +889,39 @@ body[data-radius="Sharp"] { --r: 6px; }
 
 .welcome {
   display: flex; flex-direction: column; align-items: center;
-  text-align: center; padding: 20px 0;
+  text-align: center; padding: 16px 0 0;
 }
-.welcome-mark { margin-bottom: 20px; }
-.welcome-title { font-size: 40px; margin-bottom: 8px; }
-.welcome-tag { font-size: 18px; margin-bottom: 12px; font-style: italic; }
-.welcome-sub { color: var(--muted); font-size: 14px; line-height: 1.6; }
+.welcome-mark { margin-bottom: 16px; }
+.welcome-title { font-size: 40px; margin-bottom: 6px; }
+.welcome-tag { font-size: 15px; margin-bottom: 4px; font-style: italic; color: var(--muted); }
+
+.welcome-list {
+  list-style: none;
+  margin-top: 24px;
+  display: flex; flex-direction: column; gap: 10px;
+  width: 100%; text-align: left;
+}
+.welcome-list-item {
+  display: flex; align-items: flex-start; gap: 12px;
+  padding: 11px 14px;
+  background: var(--surface);
+  border-radius: var(--r);
+}
+.welcome-check {
+  width: 20px; height: 20px; border-radius: 50%;
+  background: var(--accent-soft); color: var(--accent);
+  font-size: 11px; font-weight: 700;
+  display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0; margin-top: 1px;
+}
+.welcome-feat-title { font-size: 13px; font-weight: 600; margin-bottom: 2px; }
+.welcome-feat-sub { font-size: 11px; color: var(--muted); line-height: 1.4; }
+
+.signin-msg {
+  margin-top: 10px; text-align: center;
+  font-size: 12px; color: var(--muted);
+  animation: fadeIn .2s ease;
+}
 
 .step { padding: 12px 0; }
 .step-title { font-size: 26px; line-height: 1.2; margin-bottom: 8px; }
@@ -2921,8 +2948,9 @@ Object.assign(window, { ScreenJournal, ScreenInsights });
 /* Daily v2 — Onboarding flow */
 const { useState: useState_O } = React;
 
-function Onboarding({ onComplete, defaultName }) {
+function Onboarding({ onComplete, onSignIn, defaultName }) {
   const [step, setStep] = useState_O(0);
+  const [signInMsg, setSignInMsg] = useState_O(false);
   const [data, setData] = useState_O({
     name: defaultName || "",
     email: "",
@@ -2942,7 +2970,7 @@ function Onboarding({ onComplete, defaultName }) {
   const toggleReason = (r) => set("reasons", data.reasons.includes(r) ? data.reasons.filter(x => x !== r) : [...data.reasons, r]);
 
   const STEPS = [
-    { id: "welcome",  next: "Begin" },
+    { id: "welcome",  next: "Create account" },
     { id: "name",     next: "Continue", canNext: () => !!data.name.trim() && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(data.email.trim()) },
     { id: "reasons",  next: "Continue", canNext: () => data.reasons.length > 0 },
     { id: "care",     next: "Continue" },
@@ -2965,11 +2993,13 @@ function Onboarding({ onComplete, defaultName }) {
         {step > 0 && step < STEPS.length - 1 && (
           <button className="icon-btn" onClick={back}><IconBack size={18}/></button>
         )}
-        <div className="onboard-dots">
-          {STEPS.map((_, i) => (
-            <span key={i} className={`od ${i === step ? "on" : ""} ${i < step ? "done" : ""}`}/>
-          ))}
-        </div>
+        {step > 0 ? (
+          <div className="onboard-dots">
+            {STEPS.slice(1).map((_, i) => (
+              <span key={i} className={`od ${i+1 === step ? "on" : ""} ${i+1 < step ? "done" : ""}`}/>
+            ))}
+          </div>
+        ) : <div/>}
         {step > 0 && step < STEPS.length - 1 ? (
           <button className="skip-link" onClick={() => onComplete(data)}>Skip</button>
         ) : <div style={{width:36}}/>}
@@ -2988,7 +3018,15 @@ function Onboarding({ onComplete, defaultName }) {
       <div className="onboard-foot">
         <button className="btn primary" disabled={!canAdvance} onClick={advance}>{current.next}</button>
         {current.id === "welcome" && (
-          <button className="link" style={{marginTop: 12}}>I already have an account</button>
+          <>
+            <button className="link" style={{marginTop: 12}} onClick={() => {
+              if (onSignIn) onSignIn();
+              setSignInMsg(true);
+            }}>Sign in to existing account</button>
+            {signInMsg && (
+              <p className="signin-msg">No account found on this device.<br/>Create one above to get started.</p>
+            )}
+          </>
         )}
       </div>
     </div>
@@ -2996,10 +3034,16 @@ function Onboarding({ onComplete, defaultName }) {
 }
 
 function StepWelcome() {
+  const features = [
+    ["Track moods & medications", "Log daily check-ins, doses, and how you feel"],
+    ["Spot patterns over time", "See your mood trends and side effect history"],
+    ["Share with your doctor", "Generate clinical reports for appointments"],
+    ["Completely private", "Everything stays on your device — nothing shared"],
+  ];
   return (
     <div className="welcome">
       <div className="welcome-mark">
-        <svg viewBox="0 0 120 120" width="80" height="80">
+        <svg viewBox="0 0 120 120" width="72" height="72">
           <defs>
             <radialGradient id="welcomeG" cx="50%" cy="40%">
               <stop offset="0%" stopColor="white" stopOpacity="0.8"/>
@@ -3011,8 +3055,18 @@ function StepWelcome() {
         </svg>
       </div>
       <h1 className="serif welcome-title">Daily</h1>
-      <p className="welcome-tag">A small, private place for the weather of your mind.</p>
-      <p className="muted welcome-sub">Track moods. Notice patterns. Carry a few tools for hard days. No noise, no judgment.</p>
+      <p className="welcome-tag">Your private mental wellness companion.</p>
+      <ul className="welcome-list">
+        {features.map(([title, sub]) => (
+          <li key={title} className="welcome-list-item">
+            <span className="welcome-check">&#10003;</span>
+            <div>
+              <div className="welcome-feat-title">{title}</div>
+              <div className="welcome-feat-sub">{sub}</div>
+            </div>
+          </li>
+        ))}
+      </ul>
     </div>
   );
 }
@@ -4150,6 +4204,7 @@ function App() {
               </div>
               <Onboarding
                 defaultName={profile.name}
+                onSignIn={() => {/* no backend yet — message shown inline */}}
                 onComplete={(data) => {
                   setProfile(p => ({
                     ...p,
