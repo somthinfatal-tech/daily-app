@@ -1855,7 +1855,7 @@ function PaneMeds({ meds, setMeds, toast }) {
   const [editing, setEditing]       = useState_C(null);
   const [adding, setAdding]         = useState_C(false);
   const [newMed, setNewMed]         = useState_C(BLANK_MED);
-  const [confirmDel, setConfirmDel] = useState_C(null);
+  const [confirmDel, setConfirmDel] = useState_C(null); // stores "name|dose" key
 
   const taken  = meds.filter(m => m.taken).length;
   const adh14  = 92;
@@ -1877,13 +1877,13 @@ function PaneMeds({ meds, setMeds, toast }) {
     setNewMed(BLANK_MED);
   };
 
-  /* ── remove medication ── */
-  const removeMed = (id) => {
-    const m = meds.find(x => x.id === id);
-    setMeds(meds.filter(x => x.id !== id));
+  /* ── remove ALL doses of a medication by name|dose key ── */
+  const removeMed = (key) => {
+    const [name, dose] = key.split("|");
+    setMeds(meds.filter(x => !(x.name === name && x.dose === dose)));
     setConfirmDel(null);
     setEditing(null);
-    toast({ msg: `${m?.name || "Medication"} removed` });
+    toast({ msg: `${name} removed` });
   };
 
   /* ── unique profiles for "Your medications" section ── */
@@ -1944,7 +1944,7 @@ function PaneMeds({ meds, setMeds, toast }) {
               <button className="quiet-btn" onClick={() => { toast({ msg: "Snoozed 15 min" }); setEditing(null); }}>
                 <IconBell size={13}/> Snooze 15 min
               </button>
-              <button className="quiet-btn danger" onClick={() => { setConfirmDel(m.id); setEditing(null); }}>
+              <button className="quiet-btn danger" onClick={() => { setConfirmDel(`${m.name}|${m.dose}`); setEditing(null); }}>
                 <IconClose size={13}/> Remove this medication
               </button>
               <button className="quiet-btn" onClick={() => setEditing(null)}>
@@ -1964,26 +1964,41 @@ function PaneMeds({ meds, setMeds, toast }) {
         <div className="empty">No medications added yet.</div>
       )}
 
-      {profiles.map((m) => (
-        <Card key={`${m.name}|${m.dose}`} className="med-card">
-          <div className="row between" style={{alignItems:"flex-start"}}>
-            <div style={{flex:1, minWidth:0}}>
-              <div className="med-card-name">{m.name} <span className="muted regular">{m.dose}</span></div>
-              <div className="muted xsmall">{m.purpose || "No purpose noted"} · {m.time}</div>
+      {profiles.map((m) => {
+        const key = `${m.name}|${m.dose}`;
+        const isConfirming = confirmDel === key;
+        return (
+          <Card key={key} className="med-card">
+            <div className="row between" style={{alignItems:"flex-start"}}>
+              <div style={{flex:1, minWidth:0}}>
+                <div className="med-card-name">{m.name} <span className="muted regular">{m.dose}</span></div>
+                <div className="muted xsmall">{m.purpose || "No purpose noted"} · {m.time}</div>
+              </div>
+              <button className="more" onClick={() => setConfirmDel(isConfirming ? null : key)} aria-label="Remove">
+                <IconClose size={15}/>
+              </button>
             </div>
-            <button className="more" onClick={() => setConfirmDel(m.id)} aria-label="Remove">
-              <IconClose size={15}/>
-            </button>
-          </div>
-          <div className="med-card-chips" style={{marginTop:8}}>
-            <span className="chip"><span className="chip-dot dot-good"/>{adh14}% adherence</span>
-            <span className="chip"><IconClock size={11}/> {m.supply || "—"} days left</span>
-          </div>
-          {m.warn && (
-            <div className="warn-row"><IconAlert size={13}/> <span>{m.warn}</span></div>
-          )}
-        </Card>
-      ))}
+            <div className="med-card-chips" style={{marginTop:8}}>
+              <span className="chip"><span className="chip-dot dot-good"/>{adh14}% adherence</span>
+              <span className="chip"><IconClock size={11}/> {m.supply || "—"} days left</span>
+            </div>
+            {m.warn && (
+              <div className="warn-row"><IconAlert size={13}/> <span>{m.warn}</span></div>
+            )}
+            {isConfirming && (
+              <div className="med-actions" style={{marginTop:10}}>
+                <div className="muted small" style={{padding:"4px 0 8px"}}>Remove <strong>{m.name} {m.dose}</strong> and all its scheduled doses?</div>
+                <button className="quiet-btn danger" onClick={() => removeMed(key)}>
+                  <IconClose size={13}/> Yes, remove medication
+                </button>
+                <button className="quiet-btn" onClick={() => setConfirmDel(null)}>
+                  Cancel
+                </button>
+              </div>
+            )}
+          </Card>
+        );
+      })}
 
       <div className="block padded">
         <button className="btn primary" onClick={() => setAdding(true)}>
@@ -2026,19 +2041,6 @@ function PaneMeds({ meds, setMeds, toast }) {
         </div>
       </Sheet>
 
-      {/* ── Confirm remove sheet ── */}
-      <Sheet open={!!confirmDel} onClose={() => setConfirmDel(null)} title="Remove medication?">
-        <div style={{paddingBottom: 8}}>
-          <p className="muted small" style={{marginBottom: 16, lineHeight: 1.6}}>
-            <strong>{meds.find(m => m.id === confirmDel)?.name}</strong> will be removed from your list and today's schedule. This can't be undone.
-          </p>
-          <button className="btn primary" style={{background:"#C97A7A", marginBottom: 8}}
-            onClick={() => removeMed(confirmDel)}>
-            <IconClose size={14}/> Remove
-          </button>
-          <button className="btn ghost" onClick={() => setConfirmDel(null)}>Cancel</button>
-        </div>
-      </Sheet>
     </>
   );
 }
