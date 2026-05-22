@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8"/>
-<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover"/>
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, interactive-widget=resizes-content"/>
 <title>Daily — for your mind</title>
 
 <!-- PWA -->
@@ -194,7 +194,7 @@ body[data-radius="Sharp"] { --r: 6px; }
 
 /* ====== Buttons ====== */
 .icon-btn {
-  width: 36px; height: 36px;
+  width: 44px; height: 44px;
   background: none; border: none;
   cursor: pointer; color: inherit;
   display: flex; align-items: center; justify-content: center;
@@ -333,6 +333,7 @@ body[data-radius="Sharp"] { --r: 6px; }
   flex: 1;
   padding: 0 var(--pad) 0;
   -webkit-overflow-scrolling: touch;
+  overscroll-behavior: contain;
 }
 .sheet-body::-webkit-scrollbar { display: none; }
 
@@ -1601,15 +1602,36 @@ const Toast = ({ toast, onClose, onUndo }) => {
 
 /* Bottom sheet primitive */
 function Sheet({ open, onClose, title, children, footer }) {
+  const sheetRef = React.useRef(null);
+
+  React.useEffect(() => {
+    const vv = window.visualViewport;
+    if (!vv || !sheetRef.current) return;
+    const update = () => {
+      if (sheetRef.current) {
+        sheetRef.current.style.maxHeight = Math.floor(vv.height * 0.94) + 'px';
+      }
+    };
+    if (open) {
+      update();
+      vv.addEventListener('resize', update);
+      vv.addEventListener('scroll', update);
+    }
+    return () => {
+      vv.removeEventListener('resize', update);
+      vv.removeEventListener('scroll', update);
+    };
+  }, [open]);
+
   return (
     <>
       <div className={`scrim ${open ? "in" : ""}`} onClick={onClose}/>
-      <div className={`sheet ${open ? "in" : ""}`}>
-        <div className="sheet-handle"/>
+      <div ref={sheetRef} className={`sheet ${open ? "in" : ""}`}>
+        <div className="sheet-handle" onClick={onClose} style={{cursor:"pointer", padding:"8px 0", margin:"2px auto 0", width:60}}/>
         {title && (
           <div className="sheet-head">
             <h3 className="serif sheet-title">{title}</h3>
-            <button className="icon-btn" onClick={onClose} aria-label="Close"><IconClose size={16}/></button>
+            <button className="icon-btn" onClick={onClose} aria-label="Close"><IconClose size={18}/></button>
           </div>
         )}
         <div className="sheet-body">{children}</div>
@@ -2265,7 +2287,6 @@ function PaneMeds({ meds, setMeds, toast }) {
               className="text-input"
               placeholder="Type to search medications…"
               value={medSearch}
-              autoFocus
               autoComplete="off"
               onChange={e => {
                 const v = e.target.value;
@@ -2275,6 +2296,7 @@ function PaneMeds({ meds, setMeds, toast }) {
                 if (!v) { setSelectedMedInfo(null); }
               }}
               onFocus={() => { if (medSearch.length >= 1) setShowSuggestions(true); }}
+              onBlur={() => { setTimeout(() => setShowSuggestions(false), 150); }}
             />
             {medSuggestions.length > 0 && (
               <div className="med-suggest-list">
@@ -2355,6 +2377,10 @@ function PaneMeds({ meds, setMeds, toast }) {
           <input className="text-input" placeholder="e.g. Take with food, avoid grapefruit"
             value={newMed.warn} onChange={e => setNewMed(n => ({...n, warn: e.target.value}))}/>
 
+          <button className="link muted" style={{marginTop:20, marginBottom:8, width:"100%", textAlign:"center", fontSize:14}}
+            onClick={() => { setAdding(false); setNewMed(BLANK_MED); setMedSearch(""); setSelectedMedInfo(null); setShowSuggestions(false); }}>
+            Cancel
+          </button>
         </div>
       </Sheet>
 
