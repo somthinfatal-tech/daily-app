@@ -345,6 +345,60 @@ body[data-radius="Sharp"] { --r: 6px; }
   background: var(--surface);
 }
 
+/* ====== PIN Lock ====== */
+.pin-lock {
+  display: flex; flex-direction: column; align-items: center;
+  justify-content: center; height: 100%; background: var(--bg);
+  text-align: center; padding: 32px 24px; box-sizing: border-box;
+}
+.pin-brand { margin-bottom: 28px; }
+.pin-title { font-size: 20px; font-weight: 600; margin-bottom: 6px; }
+.pin-sub { color: var(--muted); font-size: 14px; margin-bottom: 28px; max-width: 240px; line-height: 1.5; }
+.pin-dots { display: flex; gap: 18px; margin-bottom: 36px; }
+.pin-dot { width: 14px; height: 14px; border-radius: 50%; border: 2px solid var(--accent); transition: background .12s; }
+.pin-dot.on { background: var(--accent); }
+@keyframes pinShake {
+  0%,100% { transform: translateX(0); }
+  20%,60% { transform: translateX(-8px); }
+  40%,80% { transform: translateX(8px); }
+}
+.pin-dots.shake { animation: pinShake .45s ease; }
+.pin-pad { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; width: 240px; }
+.pin-key {
+  height: 68px; border-radius: 50%; border: none;
+  background: var(--surface); font-size: 24px; font-weight: 400;
+  cursor: pointer; font-family: inherit; color: var(--text);
+  transition: background .1s; display: flex; align-items: center; justify-content: center;
+  box-shadow: 0 1px 3px rgba(0,0,0,.08);
+}
+.pin-key:active { background: var(--line); }
+.pin-key.blank { background: none; box-shadow: none; cursor: default; }
+.pin-key.del { font-size: 20px; }
+.pin-err { color: var(--err, #C97A7A); font-size: 13px; margin-bottom: 12px; min-height: 18px; }
+
+/* ====== Schedule rows (per-time dose in Add form) ====== */
+.sched-list { display: flex; flex-direction: column; gap: 6px; margin-top: 10px; }
+.sched-row {
+  display: flex; align-items: center; gap: 8px;
+  background: var(--bg); border-radius: calc(var(--r) * 0.6);
+  padding: 8px 10px;
+}
+.sched-time { font-size: 12px; font-weight: 600; min-width: 68px; flex-shrink: 0; color: var(--text); }
+.sched-dose-in {
+  flex: 1; font-size: 14px; border: none; background: transparent;
+  border-bottom: 1.5px solid var(--line); padding: 3px 0;
+  font-family: inherit; color: var(--text); outline: none;
+  transition: border-color .15s;
+}
+.sched-dose-in::placeholder { color: var(--muted); }
+.sched-dose-in:focus { border-bottom-color: var(--accent); }
+.sched-rm {
+  width: 26px; height: 26px; border-radius: 50%; border: none;
+  background: none; color: var(--muted); cursor: pointer; font-size: 18px;
+  display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+  line-height: 1;
+}
+
 .sheet-divider {
   display: flex; align-items: center; gap: 10px;
   color: var(--muted); font-size: 11px;
@@ -1943,8 +1997,14 @@ function ScreenCare({ go, meds, setMeds, symptoms, setSymptoms, activities, setA
 }
 
 /* ===== Meds ===== */
-const BLANK_MED = { name: "", dose: "", times: [], note: "", purpose: "", warn: "" };
-const getMedTimes = (m) => (m.times && m.times.length) ? m.times : (m.time ? [m.time] : []);
+const BLANK_MED = { name: "", schedule: [], note: "", purpose: "", warn: "" };
+/* Returns [{time, dose}] — handles both new schedule[] and old dose+times[] formats */
+const getMedSchedule = (m) => {
+  if (m.schedule && m.schedule.length) return m.schedule;
+  const times = (m.times && m.times.length) ? m.times : (m.time ? [m.time] : []);
+  return times.map(t => ({ time: t, dose: m.dose || "" }));
+};
+const getMedTimes = (m) => getMedSchedule(m).map(s => s.time);
 
 const MED_DB = [
   /* ── Antidepressants (SSRIs) ── */
@@ -2114,12 +2174,17 @@ function PaneMeds({ meds, setMeds, toast }) {
 
   /* ── add new medication ── */
   const toggleTime = (t) => setNewMed(n => {
-    const arr = n.times || [];
-    return { ...n, times: arr.includes(t) ? arr.filter(x => x !== t) : [...arr, t] };
+    const sched = n.schedule || [];
+    const exists = sched.find(s => s.time === t);
+    return { ...n, schedule: exists ? sched.filter(s => s.time !== t) : [...sched, { time: t, dose: "" }] };
   });
+  const updateScheduleDose = (t, dose) => setNewMed(n => ({
+    ...n, schedule: (n.schedule||[]).map(s => s.time === t ? { ...s, dose } : s)
+  }));
 
   const saveMed = () => {
-    if (!newMed.name.trim() || !newMed.dose.trim() || !(newMed.times||[]).length) return;
+    const sched = newMed.schedule || [];
+    if (!newMed.name.trim() || !sched.length || sched.some(s => !s.dose.trim())) return;
     setMeds([...meds, { id: Date.now(), ...newMed, taken: {} }]);
     toast({ msg: `${newMed.name} added` });
     setAdding(false);
@@ -2127,17 +2192,17 @@ function PaneMeds({ meds, setMeds, toast }) {
     setMedSearch(""); setSelectedMedInfo(null); setShowSuggestions(false);
   };
 
-  /* ── remove ALL doses of a medication by name|dose key ── */
-  const removeMed = (key) => {
-    const [name, dose] = key.split("|");
-    setMeds(meds.filter(x => !(x.name === name && x.dose === dose)));
+  /* ── remove a medication by id ── */
+  const removeMed = (id) => {
+    const m = meds.find(x => x.id === id);
+    setMeds(meds.filter(x => x.id !== id));
     setConfirmDel(null);
     setEditing(null);
-    toast({ msg: `${name} removed` });
+    toast({ msg: `${m?.name || "Medication"} removed` });
   };
 
-  /* ── unique profiles for "Your medications" section ── */
-  const profiles = [...new Map(meds.map(m => [`${m.name}|${m.dose}`, m])).values()];
+  /* ── medication profiles for "Your medications" section ── */
+  const profiles = meds;
 
   /* ── autocomplete suggestions (computed outside JSX) ── */
   const medSuggestions = (showSuggestions && medSearch.length >= 1)
@@ -2178,19 +2243,19 @@ function PaneMeds({ meds, setMeds, toast }) {
         <div className="empty">No medications scheduled. Tap "Add medication" below to get started.</div>
       )}
 
-      {meds.flatMap(m => getMedTimes(m).map((t, ti) => {
-        const rowKey = `${m.id}|${t}|${ti}`;
-        const done = isTakenToday(m, t);
+      {meds.flatMap(m => getMedSchedule(m).map((sched, si) => {
+        const rowKey = `${m.id}|${sched.time}|${si}`;
+        const done = isTakenToday(m, sched.time);
         const showMenu = editing === rowKey;
         return (
           <Card key={rowKey} className="med-row-card">
             <div className="med-row-inner">
-              <button className={`check ${done?"on":""}`} onClick={() => onCheck(m.id, t)} aria-label={done?"Mark untaken":"Mark taken"}>
+              <button className={`check ${done?"on":""}`} onClick={() => onCheck(m.id, sched.time)} aria-label={done?"Mark untaken":"Mark taken"}>
                 {done && <IconCheck size={14}/>}
               </button>
               <div className="med-meta">
-                <div className="med-name">{m.name} <span className="muted regular">{m.dose}</span></div>
-                <div className="muted xsmall">{t}{m.note ? ` · ${m.note}` : ""}</div>
+                <div className="med-name">{m.name} <span className="muted regular">{sched.dose}</span></div>
+                <div className="muted xsmall">{sched.time}{m.note ? ` · ${m.note}` : ""}</div>
                 {done && <div className="taken-stamp xsmall">{m.takenAt ? `✓ Taken at ${m.takenAt}` : '✓ Taken'}</div>}
               </div>
               <button className="more" onClick={() => setEditing(showMenu ? null : rowKey)} aria-label="Options">
@@ -2199,13 +2264,13 @@ function PaneMeds({ meds, setMeds, toast }) {
             </div>
             {showMenu && (
               <div className="med-actions">
-                <button className="quiet-btn" onClick={() => { onCheck(m.id, t); setEditing(null); }}>
+                <button className="quiet-btn" onClick={() => { onCheck(m.id, sched.time); setEditing(null); }}>
                   <IconClock size={13}/> {done ? "Mark as not taken" : "Mark as taken"}
                 </button>
                 <button className="quiet-btn" onClick={() => { toast({ msg: "Snoozed 15 min" }); setEditing(null); }}>
                   <IconBell size={13}/> Snooze 15 min
                 </button>
-                <button className="quiet-btn danger" onClick={() => { setConfirmDel(`${m.name}|${m.dose}`); setEditing(null); }}>
+                <button className="quiet-btn danger" onClick={() => { setConfirmDel(m.id); setEditing(null); }}>
                   <IconClose size={13}/> Remove this medication
                 </button>
                 <button className="quiet-btn" onClick={() => setEditing(null)}>Cancel</button>
@@ -2225,16 +2290,16 @@ function PaneMeds({ meds, setMeds, toast }) {
       )}
 
       {profiles.map((m) => {
-        const key = `${m.name}|${m.dose}`;
-        const isConfirming = confirmDel === key;
+        const isConfirming = confirmDel === m.id;
+        const sched = getMedSchedule(m);
         return (
-          <Card key={key} className="med-card">
+          <Card key={m.id} className="med-card">
             <div className="row between" style={{alignItems:"flex-start"}}>
               <div style={{flex:1, minWidth:0}}>
-                <div className="med-card-name">{m.name} <span className="muted regular">{m.dose}</span></div>
-                <div className="muted xsmall">{m.purpose || "No purpose noted"}{getMedTimes(m).length ? " · " + getMedTimes(m).join(" · ") : ""}</div>
+                <div className="med-card-name">{m.name}</div>
+                <div className="muted xsmall">{m.purpose || "No purpose noted"}{sched.length ? " · " + sched.map(s => `${s.time} ${s.dose}`).join(" · ") : ""}</div>
               </div>
-              <button className="more" onClick={() => setConfirmDel(isConfirming ? null : key)} aria-label="Remove">
+              <button className="more" onClick={() => setConfirmDel(isConfirming ? null : m.id)} aria-label="Remove">
                 <IconClose size={15}/>
               </button>
             </div>
@@ -2247,8 +2312,8 @@ function PaneMeds({ meds, setMeds, toast }) {
             )}
             {isConfirming && (
               <div className="med-actions" style={{marginTop:10}}>
-                <div className="muted small" style={{padding:"4px 0 8px"}}>Remove <strong>{m.name} {m.dose}</strong> and all its scheduled doses?</div>
-                <button className="quiet-btn danger" onClick={() => removeMed(key)}>
+                <div className="muted small" style={{padding:"4px 0 8px"}}>Remove <strong>{m.name}</strong> and all its scheduled doses?</div>
+                <button className="quiet-btn danger" onClick={() => removeMed(m.id)}>
                   <IconClose size={13}/> Yes, remove medication
                 </button>
                 <button className="quiet-btn" onClick={() => setConfirmDel(null)}>
@@ -2273,7 +2338,7 @@ function PaneMeds({ meds, setMeds, toast }) {
       }} title="Add medication"
         footer={
           <button className="btn primary" style={{width:"100%"}}
-            disabled={!newMed.name.trim() || !newMed.dose.trim() || !(newMed.times||[]).length}
+            disabled={!newMed.name.trim() || !(newMed.schedule||[]).length || (newMed.schedule||[]).some(s=>!s.dose.trim())}
             onClick={saveMed}>
             <IconCheck size={14}/> Save medication
           </button>
@@ -2316,44 +2381,46 @@ function PaneMeds({ meds, setMeds, toast }) {
             )}
           </div>
 
-          {/* Dose with chips */}
-          <label className="form-l caps xsmall muted" style={{marginTop:14}}>Dose *</label>
-          {selectedMedInfo && (
-            <div className="dose-chip-row" style={{marginBottom:6}}>
-              {selectedMedInfo.doses.map(d => (
-                <button key={d} className={`dose-chip ${newMed.dose===d?"on":""}`}
-                  onClick={() => setNewMed(n => ({...n, dose: d}))}>
-                  {d}
-                </button>
-              ))}
-            </div>
-          )}
-          <input className="text-input" placeholder={selectedMedInfo ? "Tap a dose above or type custom" : "e.g. 50mg"}
-            value={newMed.dose} onChange={e => setNewMed(n => ({...n, dose: e.target.value}))}/>
-
-          {/* Time — multi-select */}
+          {/* Time & Dose — tap a time, then set its dose */}
           <label className="form-l caps xsmall muted" style={{marginTop:14}}>
-            Time / schedule *
-            {(newMed.times||[]).length > 0 && (
+            Time &amp; dose *
+            {(newMed.schedule||[]).length > 0 && (
               <span style={{marginLeft:6, color:"var(--accent)", fontWeight:600, textTransform:"none", letterSpacing:0}}>
-                {(newMed.times||[]).length} selected
+                {(newMed.schedule||[]).length} time{(newMed.schedule||[]).length !== 1 ? "s" : ""}
               </span>
             )}
           </label>
-          <div className="dose-chip-row" style={{marginBottom:6}}>
+          <div className="dose-chip-row" style={{marginBottom:4}}>
             {["6:00 AM","7:00 AM","8:00 AM","9:00 AM","12:00 PM","2:00 PM","6:00 PM","8:00 PM","10:00 PM","Bedtime","As needed"].map(t => (
-              <button key={t} className={`dose-chip ${(newMed.times||[]).includes(t)?"on":""}`}
+              <button key={t} className={`dose-chip ${(newMed.schedule||[]).find(s=>s.time===t)?"on":""}`}
                 onClick={() => toggleTime(t)}>
                 {t}
               </button>
             ))}
           </div>
-          {(newMed.times||[]).length > 0 && (
-            <div className="muted xsmall" style={{marginBottom:8}}>
-              Scheduled: {(newMed.times||[]).join(" · ")}
+          {(newMed.schedule||[]).length > 0 && (
+            <div className="sched-list">
+              {(newMed.schedule||[]).map(s => (
+                <div key={s.time} className="sched-row">
+                  <span className="sched-time">{s.time}</span>
+                  {selectedMedInfo && selectedMedInfo.doses.length > 0 ? (
+                    <select className="sched-dose-in" value={s.dose}
+                      onChange={e => updateScheduleDose(s.time, e.target.value)}
+                      style={{appearance:"auto"}}>
+                      <option value="">Select dose…</option>
+                      {selectedMedInfo.doses.map(d => <option key={d} value={d}>{d}</option>)}
+                      <option value="__custom">Custom…</option>
+                    </select>
+                  ) : (
+                    <input className="sched-dose-in" placeholder="Dose e.g. 50mg"
+                      value={s.dose} onChange={e => updateScheduleDose(s.time, e.target.value)}/>
+                  )}
+                  <button className="sched-rm" onClick={() => toggleTime(s.time)} aria-label="Remove time">×</button>
+                </div>
+              ))}
             </div>
           )}
-          <input className="text-input" placeholder="Add a custom time (press Enter)"
+          <input className="text-input" placeholder="Add a custom time (press Enter)" style={{marginTop:8}}
             onKeyDown={e => {
               if (e.key === "Enter" && e.target.value.trim()) {
                 toggleTime(e.target.value.trim());
@@ -3101,6 +3168,81 @@ Object.assign(window, { ScreenJournal, ScreenInsights });
 
 </script>
 <script type="text/babel">
+/* Daily v2 — PIN lock */
+const { useState: useState_PIN, useEffect: useEffect_PIN } = React;
+
+function PinLock({ stored, onUnlock, isSetup, onSkip }) {
+  const [digits, setDigits] = useState_PIN("");
+  const [phase, setPhase] = useState_PIN("enter"); // "enter" | "confirm"
+  const [confirmPin, setConfirmPin] = useState_PIN("");
+  const [err, setErr] = useState_PIN("");
+  const [shake, setShake] = useState_PIN(false);
+
+  const triggerErr = (msg) => {
+    setErr(msg); setShake(true);
+    setTimeout(() => { setDigits(""); setShake(false); setErr(""); }, 700);
+  };
+
+  const addDigit = (d) => {
+    if (digits.length >= 4) return;
+    const next = digits + d;
+    setDigits(next);
+    if (next.length < 4) return;
+
+    if (!isSetup) {
+      if (next === stored) {
+        try { sessionStorage.setItem("daily-unlocked","1"); } catch {}
+        onUnlock();
+      } else { triggerErr("Incorrect passcode"); }
+      return;
+    }
+
+    if (phase === "enter") {
+      setTimeout(() => { setConfirmPin(next); setDigits(""); setPhase("confirm"); }, 250);
+    } else {
+      if (next === confirmPin) {
+        try { localStorage.setItem("daily-pin", next); sessionStorage.setItem("daily-unlocked","1"); } catch {}
+        onUnlock();
+      } else { setPhase("enter"); setConfirmPin(""); triggerErr("Passcodes didn't match — try again"); }
+    }
+  };
+
+  const delDigit = () => setDigits(p => p.slice(0,-1));
+
+  const title = isSetup
+    ? (phase === "confirm" ? "Confirm passcode" : "Choose a passcode")
+    : "Enter passcode";
+
+  return (
+    <div className="pin-lock">
+      <div className="pin-brand">
+        <div className="welcome-mark" style={{width:44,height:44,margin:"0 auto 10px"}}/>
+        <div className="serif" style={{fontSize:22}}>Daily</div>
+      </div>
+      <div className="pin-title">{title}</div>
+      {isSetup && <div className="pin-sub">{phase === "confirm" ? "Enter it again to confirm." : "Choose a 4-digit code. You'll enter it each time you open the app."}</div>}
+      <div className="pin-err">{err}</div>
+      <div className={`pin-dots ${shake?"shake":""}`}>
+        {[0,1,2,3].map(i=><div key={i} className={`pin-dot${i<digits.length?" on":""}`}/>)}
+      </div>
+      <div className="pin-pad">
+        {[1,2,3,4,5,6,7,8,9].map(d=>(
+          <button key={d} className="pin-key" onClick={()=>addDigit(String(d))}>{d}</button>
+        ))}
+        <button className="pin-key blank" onClick={isSetup&&onSkip?onSkip:undefined}>
+          {isSetup&&onSkip ? <span style={{fontSize:13,color:"var(--muted)"}}>Skip</span> : ""}
+        </button>
+        <button className="pin-key" onClick={()=>addDigit("0")}>0</button>
+        <button className="pin-key del" onClick={delDigit}>⌫</button>
+      </div>
+    </div>
+  );
+}
+
+Object.assign(window, { PinLock });
+</script>
+
+<script type="text/babel">
 /* Daily v2 — Onboarding flow */
 const { useState: useState_O } = React;
 
@@ -3361,8 +3503,8 @@ function StepPrivacy({ data, set }) {
 
       <div className="onboard-toggle">
         <div>
-          <div className="med-name">Lock with Face ID / fingerprint</div>
-          <div className="muted xsmall">Recommended if you share a phone</div>
+          <div className="med-name">Set a passcode</div>
+          <div className="muted xsmall">Protect your data with a 4-digit PIN</div>
         </div>
         <Toggle on={data.biometricLock} onChange={v => set("biometricLock", v)}/>
       </div>
@@ -3392,7 +3534,7 @@ function StepReady({ data }) {
         <div className="rs-row"><span className="rs-l">Checking in for</span><span className="rs-v">{reasons.length ? reasons.map(r => r[0].toUpperCase() + r.slice(1)).join(" · ") : "general wellbeing"}</span></div>
         <div className="rs-row"><span className="rs-l">Daily prompt</span><span className="rs-v">{formatTime(data.checkinTime)}</span></div>
         {data.therapist && <div className="rs-row"><span className="rs-l">Care team</span><span className="rs-v">{data.therapist}</span></div>}
-        <div className="rs-row"><span className="rs-l">Lock</span><span className="rs-v">{data.biometricLock ? "Face ID" : "None"}</span></div>
+        <div className="rs-row"><span className="rs-l">Passcode</span><span className="rs-v">{data.biometricLock ? "Will be set" : "None"}</span></div>
       </div>
     </div>
   );
@@ -3420,11 +3562,11 @@ Object.assign(window, { Onboarding, Toggle, formatTime });
 /* Daily v2 — Settings, Profile, Reminders, History (Calendar) */
 const { useState: useState_S } = React;
 
-function ScreenSettings({ go, profile, setProfile, reminders, setReminders }) {
+function ScreenSettings({ go, profile, setProfile, reminders, setReminders, onStartPinSetup }) {
   const [sub, setSub] = useState_S(null);
   if (sub === "profile") return <SubProfile back={() => setSub(null)} profile={profile} setProfile={setProfile}/>;
   if (sub === "reminders") return <SubReminders back={() => setSub(null)} reminders={reminders} setReminders={setReminders}/>;
-  if (sub === "privacy") return <SubPrivacy back={() => setSub(null)} profile={profile} setProfile={setProfile}/>;
+  if (sub === "privacy") return <SubPrivacy back={() => setSub(null)} profile={profile} setProfile={setProfile} onStartPinSetup={() => { setSub(null); onStartPinSetup(); }}/>;
   if (sub === "care") return <SubCareTeam back={() => setSub(null)} profile={profile} setProfile={setProfile}/>;
   if (sub === "connected") return <SubConnected back={() => setSub(null)}/>;
   if (sub === "data") return <SubData back={() => setSub(null)}/>;
@@ -3455,7 +3597,7 @@ function ScreenSettings({ go, profile, setProfile, reminders, setReminders }) {
       </SettingsGroup>
 
       <SettingsGroup title="Privacy">
-        <SettingsRow Ic={IconLock} label="Privacy & security" sub={profile.biometricLock ? "Face ID on" : "No app lock"} onClick={() => setSub("privacy")}/>
+        <SettingsRow Ic={IconLock} label="Privacy & security" sub={localStorage.getItem("daily-pin") ? "Passcode on" : "No app lock"} onClick={() => setSub("privacy")}/>
         <SettingsRow Ic={IconShare} label="Data export & sharing" sub="Manage your data" onClick={() => setSub("data")}/>
       </SettingsGroup>
 
@@ -3622,20 +3764,32 @@ function SubReminders({ back, reminders, setReminders }) {
   );
 }
 
-function SubPrivacy({ back, profile, setProfile }) {
+function SubPrivacy({ back, profile, setProfile, onStartPinSetup }) {
   const [draft, setDraft] = useState_S(profile);
+  const [hasPin, setHasPin] = useState_S(!!localStorage.getItem("daily-pin"));
   const set = (k, v) => setDraft(d => ({ ...d, [k]: v }));
+  const removePin = () => {
+    try { localStorage.removeItem("daily-pin"); sessionStorage.removeItem("daily-unlocked"); } catch {}
+    setHasPin(false);
+  };
   return (
     <div className="scroll" data-screen-label="Privacy">
       <PageHeader title="Privacy & security" onBack={back} action={<button className="link" onClick={() => { setProfile(draft); back(); }}>Save</button>}/>
 
       <Card className="rem-card">
-        <div className="row between">
+        <div className="row between" style={{alignItems:"center"}}>
           <div>
-            <div className="med-name">App lock</div>
-            <div className="muted xsmall">Use Face ID / fingerprint to unlock</div>
+            <div className="med-name">App passcode</div>
+            <div className="muted xsmall">{hasPin ? "Passcode is set — required on every open" : "Protect your data with a 4-digit PIN"}</div>
           </div>
-          <Toggle on={draft.biometricLock} onChange={v => set("biometricLock", v)}/>
+          {hasPin ? (
+            <div style={{display:"flex", gap:8}}>
+              <button className="link xsmall" onClick={onStartPinSetup}>Change</button>
+              <button className="link xsmall" style={{color:"var(--err, #C97A7A)"}} onClick={removePin}>Remove</button>
+            </div>
+          ) : (
+            <button className="btn" style={{padding:"8px 14px", width:"auto", fontSize:13}} onClick={onStartPinSetup}>Set PIN</button>
+          )}
         </div>
       </Card>
       <Card className="rem-card">
@@ -4268,6 +4422,10 @@ function App() {
   const [onboarding, setOnboarding] = useState_A(() => {
     try { return !localStorage.getItem("daily-onboarded"); } catch { return true; }
   });
+  const [locked, setLocked] = useState_A(() => {
+    try { return !!localStorage.getItem("daily-pin") && !sessionStorage.getItem("daily-unlocked"); } catch { return false; }
+  });
+  const [pinSetup, setPinSetup] = useState_A(false);
 
   const NAV_ORDER = ["today","care","mood","journal","insights"];
   const dir = (() => {
@@ -4355,9 +4513,34 @@ function App() {
     journal:  <ScreenJournal go={go} entries={entries} setEntries={setEntries} mood={mood} openCompose={viewProps.compose}/>,
     insights: <ScreenInsights go={go} entries={entries} meds={meds} symptoms={symptoms} activities={activities}/>,
     report:   <ScreenReport go={go} entries={entries} meds={meds} symptoms={symptoms} activities={activities} profile={profile}/>,
-    settings: <ScreenSettings go={go} profile={profile} setProfile={setProfile} reminders={reminders} setReminders={setReminders}/>,
+    settings: <ScreenSettings go={go} profile={profile} setProfile={setProfile} reminders={reminders} setReminders={setReminders} onStartPinSetup={() => setPinSetup(true)}/>,
     history:  <ScreenHistory go={go} entries={entries}/>,
   };
+
+  const phoneShell = (content) => (
+    <>
+      <div className="ambient" style={{ background: palette.haze }}/>
+      <div className="phone-wrap">
+        <div className="phone">
+          <div className="screen">
+            <div className="notch"/>
+            {content}
+          </div>
+        </div>
+      </div>
+    </>
+  );
+
+  if (locked) return phoneShell(
+    <PinLock stored={localStorage.getItem("daily-pin")} onUnlock={() => setLocked(false)}/>
+  );
+
+  if (pinSetup) return phoneShell(
+    <PinLock isSetup
+      onUnlock={() => setPinSetup(false)}
+      onSkip={() => { setPinSetup(false); }}
+    />
+  );
 
   if (onboarding) {
     return (
@@ -4403,6 +4586,7 @@ function App() {
                   }));
                   try { localStorage.setItem("daily-onboarded", "1"); } catch {}
                   setOnboarding(false);
+                  if (data.biometricLock) setPinSetup(true);
                 }}
               />
             </div>
